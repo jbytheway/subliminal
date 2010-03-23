@@ -1,0 +1,6 @@
+.*.swp
+.makefrags
+.obj
+/subliminal
+/user.mk
+/config.mk
