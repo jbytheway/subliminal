@@ -14,6 +14,8 @@ namespace {
 
     bool help;
     bool quiet;
+    boost::filesystem::path raw;
+    boost::filesystem::path subs;
   };
 
   void usage()
@@ -21,10 +23,12 @@ namespace {
     std::cout <<
 "Subliminal is a free subtitle extraction system\n"
 "\n"
-"  subliminal [OPTIONS]\n"
+"  subliminal [OPTIONS] --raw V1 --subs V2\n"
 "\n"
 "  -h, --help   Display this message.\n"
 "  -q, --quiet  Supress various messages.\n"
+"  -r, --raw    Version of the video without subs.\n"
+"  -s, --subs   Version of the video with subs.\n"
 << std::endl;
   }
 
@@ -34,6 +38,8 @@ namespace {
     Options results;
     parser.addOption("help",  'h', &results.help);
     parser.addOption("quiet", 'q', &results.quiet);
+    parser.addOption("raw",   'r', &results.raw);
+    parser.addOption("subs",  's', &results.subs);
 
     if (parser.parse(argc, argv)) {
       std::cerr <<
@@ -63,7 +69,13 @@ int main(int argc, char** argv)
       "Copyright (C) 2010 John Bytheway\n"
       "License GPLv3+: GNU GPL version 3 or later\n"
       "This is free software: you are free to change and redistribute it.\n"
-      "There is NO WARRANTY, to the extent permitted by law." << std::endl;
+      "There is NO WARRANTY, to the extent permitted by law.\n" << std::endl;
+  }
+
+  if (options.raw.empty() || options.subs.empty()) {
+    std::cerr << "Error: must specify two video files (see --help)" <<
+      std::endl;
+    return EXIT_FAILURE;
   }
 
   return 0;
