@@ -2,6 +2,7 @@
 #define FFMSXX__VIDEO_DIMENSIONS_HPP
 
 #include <cassert>
+#include <iosfwd>
 
 namespace ffmsxx {
 
@@ -17,6 +18,8 @@ class video_dimensions {
     int width_;
     int height_;
 };
+
+std::ostream& operator<<(std::ostream&, video_dimensions const&);
 
 }
 
