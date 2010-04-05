@@ -1,0 +1,13 @@
+Subliminal Tests
+================
+
+The test data is generated on the fly with mencoder (so you'll need mencoder to
+run these tests).
+
+The original video from which the test data is generated (root_video.avi) is a
+speedrun of StarCraft Protoss level 7 (Homeland) in 1:11 by Philip 'ballofsnow'
+Cornell from 2005-09-16.  See http://speeddemosarchive.com/Starcraft.html.
+
+Each test is defined by a .params file which specifies the options to use when
+transcoding it.
+

@@ -1,0 +1,13 @@
+PARAMS := $(wildcard *.params)
+BASES := $(basename $(PARAMS))
+SUBBEDS := $(addsuffix .subbed,$(BASES))
+OUTS := $(addsuffix .out,$(BASES))
+
+test-nonrecursive: $(OUTS)
+
+$(OUTS): %.out: %.subbed ../subliminal
+	../subliminal --quiet --raw root_video.avi --subs $< > $@
+
+$(SUBBEDS): %.subbed: %.params root_video.avi transcode.sh
+	./transcode.sh $<
+

@@ -5,3 +5,4 @@
 /user.mk
 /config.mk
 /*/Makefile
+/*/*/Makefile
