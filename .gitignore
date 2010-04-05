@@ -2,6 +2,7 @@
 .makefrags
 .obj
 .libs
+*.la
 /user.mk
 /config.mk
 /*/Makefile

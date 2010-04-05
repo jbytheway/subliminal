@@ -1,2 +1,6 @@
-SUBDIRS := subliminal
+SUBDIRS := ffmsxx subliminal
+
+all-recurse-subliminal: all-recurse-ffmsxx
+
+test-recurse-subliminal: test-recurse-ffmsxx
 

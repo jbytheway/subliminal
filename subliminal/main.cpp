@@ -4,6 +4,8 @@
 
 #include <optimal/optionsparser.hpp>
 
+#include <ffmsxx/service.hpp>
+
 namespace {
 
   struct Options {
@@ -77,6 +79,8 @@ int main(int argc, char** argv)
       std::endl;
     return EXIT_FAILURE;
   }
+
+  ffmsxx::service ffms;
 
   return 0;
 }

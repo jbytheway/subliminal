@@ -1,0 +1,2 @@
+BIN = libffmsxx.la
+LIBS = -lffms2

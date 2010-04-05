@@ -1,4 +1,5 @@
 SUBDIRS = test
 BIN := subliminal
+LIB_DEP_NAMES := ffmsxx
 LIBS := -loptimal
 
