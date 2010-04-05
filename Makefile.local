@@ -1,3 +1,2 @@
-BIN := subliminal
-LIBS := -loptimal
+SUBDIRS := subliminal
 

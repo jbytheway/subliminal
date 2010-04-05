@@ -2,6 +2,6 @@
 .makefrags
 .obj
 .libs
-/subliminal
 /user.mk
 /config.mk
+/*/Makefile
