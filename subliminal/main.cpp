@@ -18,6 +18,7 @@ namespace {
     bool quiet;
     boost::filesystem::path raw;
     boost::filesystem::path subs;
+    boost::filesystem::path output;
   };
 
   void usage()
@@ -27,10 +28,11 @@ namespace {
 "\n"
 "  subliminal [OPTIONS] --raw V1 --subs V2\n"
 "\n"
-"  -h, --help   Display this message.\n"
-"  -q, --quiet  Suppress various messages.\n"
-"  -r, --raw    Version of the video without subs.\n"
-"  -s, --subs   Version of the video with subs.\n"
+"  -h, --help    Display this message.\n"
+"  -o, --output  Save results in this file.  Default: stdout.\n"
+"  -q, --quiet   Suppress various messages.\n"
+"  -r, --raw     Version of the video without subs.\n"
+"  -s, --subs    Version of the video with subs.\n"
 << std::endl;
   }
 
@@ -38,10 +40,11 @@ namespace {
   {
     optimal::OptionsParser parser;
     Options results;
-    parser.addOption("help",  'h', &results.help);
-    parser.addOption("quiet", 'q', &results.quiet);
-    parser.addOption("raw",   'r', &results.raw);
-    parser.addOption("subs",  's', &results.subs);
+    parser.addOption("help",   'h', &results.help);
+    parser.addOption("output", 'o', &results.output);
+    parser.addOption("quiet",  'q', &results.quiet);
+    parser.addOption("raw",    'r', &results.raw);
+    parser.addOption("subs",   's', &results.subs);
 
     if (parser.parse(argc, argv)) {
       std::cerr <<

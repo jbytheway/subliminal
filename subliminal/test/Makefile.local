@@ -6,8 +6,11 @@ OUTS := $(addsuffix .out,$(BASES))
 test-nonrecursive: $(OUTS)
 
 $(OUTS): %.out: %.subbed ../subliminal
-	../subliminal --quiet --raw root_video.avi --subs $< > $@
+	../subliminal --quiet --raw root_video.avi --subs $< --output $@
 
 $(SUBBEDS): %.subbed: %.params root_video.avi transcode.sh
 	./transcode.sh $<
+
+clean:
+	rm -f *.subbed *.out
 
