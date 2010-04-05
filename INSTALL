@@ -1,0 +1,47 @@
+This project uses makeshift to build.  If the makeshift directory is empty then
+you probably need to run
+
+$ git submodule init
+$ git submodule update
+
+Next you will need some dependencies:
+
+- gcc >= 4.4 (this code uses recently added C++0x features so new gcc really is
+  needed; other compilers are unikely to cope in the near term)
+- ffmpegsource, a wrapper round ffmpeg to facilitate simple extraction of
+  frames.  If it's not in your distro then see
+  http://code.google.com/p/ffmpegsource/ .  It's certainly possible to use it
+  from the build directory; you shouldn't need to install it.
+- optimal, my options parsing library.  Read about it at
+  http://github.com/jbytheway/optimal or clone it from
+  git@github.com:jbytheway/optimal.git
+
+For me, ffmpegsource doesn't build a shared version of its library and libtool
+somehow fails to notice this and tries to link a shared library against the
+stativ one.  This doesn't work.  Could be the fault of e, ffmpegsource or
+libtool.  You can work around it by putting --tag=disable-shared in
+BUILD_LIBTOOLFLAGS in user.mk (as in the example below).
+
+You may need to add some things to user.mk, e.g. to get the right g++ version
+or allow it to find optimal if you don't install it (which you shouldn't need
+to.  Here for example is my user.mk:
+
+  CXX = g++-4.4.1
+  BUILD_LIBTOOLFLAGS += --tag=disable-shared
+  BUILD_CPPFLAGS += -I$(top_srcdir)../optimal \
+    -I$(HOME)/src/ffmpegsource/include
+  BUILD_LDFLAGS += -L$(top_srcdir)../optimal/optimal \
+    -L$(HOME)/src/ffmpegsource/src/core
+
+See makeshift/INSTALL for details of what goes in user.mk.
+
+Then to get a debug version it should be simply
+
+$ make
+
+If you have mencoder then you can run a few tests with
+
+$ make test
+
+(Right now this is quick, but it may get quite slow in the future)
+

@@ -1,0 +1,37 @@
+Subliminal
+==========
+
+Subliminal is an automatic subtitle extraction system.  It compares a raw video
+with one into which subtitles have been encoded and tries to extract those
+subtitles to facilitate soft-subbing.
+
+Copyright (C) 2010  John Bytheway <jbytheway at that gmail place>
+
+For building instructions see INSTALL.
+
+Subliminal contains:
+
+- ffmsxx
+  A thin C++ wrapper round ffmpegsource
+
+- subliminal
+  The program itself
+
+As yet there is no user documentation, but you can read subliminals --help
+message and experiment with the test data.
+
+
+LICENSE
+-------
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+this program.  If not, see <http://www.gnu.org/licenses/>.
+
