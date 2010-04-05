@@ -8,6 +8,7 @@
 #include <ffmsxx/get_single_video_source.hpp>
 
 #include "extract_subtitles.hpp"
+#include "text_feedback.hpp"
 
 namespace {
 
@@ -90,8 +91,9 @@ int main(int argc, char** argv)
 
   auto raw_source = ffmsxx::get_single_video_source(ffms, options.raw);
   auto sub_source = ffmsxx::get_single_video_source(ffms, options.subs);
+  subliminal::text_feedback feedback(std::cout);
 
-  subliminal::extract_subtitles(raw_source, sub_source);
+  subliminal::extract_subtitles(raw_source, sub_source, feedback);
 
   return 0;
 }

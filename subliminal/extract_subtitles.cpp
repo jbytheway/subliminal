@@ -2,10 +2,15 @@
 
 #include <ffmsxx/video_source.hpp>
 #include <ffmsxx/video_dimensions.hpp>
+#include <ffmsxx/video_frame.hpp>
 
 namespace subliminal {
 
-void extract_subtitles(ffmsxx::video_source& raw, ffmsxx::video_source& subs)
+void extract_subtitles(
+  ffmsxx::video_source& raw,
+  ffmsxx::video_source& subs,
+  visual_feedback& feedback
+)
 {
   // We want both sources producing video at the same resolution and pixel
   // format.
@@ -19,6 +24,12 @@ void extract_subtitles(ffmsxx::video_source& raw, ffmsxx::video_source& subs)
 
   raw.set_output_format(formats, subs_dims, ffmsxx::resizer::bicubic);
   subs.set_output_format(formats, subs_dims, ffmsxx::resizer::bicubic);
+
+  feedback.set_dimensions(subs_dims);
+
+  auto frame = raw.frame(0);
+
+  feedback.show(frame);
 }
 
 }

@@ -3,9 +3,15 @@
 
 #include <ffmsxx/fwd.hpp>
 
+#include "visual_feedback.hpp"
+
 namespace subliminal {
 
-void extract_subtitles(ffmsxx::video_source& raw, ffmsxx::video_source& subs);
+void extract_subtitles(
+  ffmsxx::video_source& raw,
+  ffmsxx::video_source& subs,
+  visual_feedback&
+);
 
 }
 
