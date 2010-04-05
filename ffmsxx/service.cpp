@@ -23,5 +23,10 @@ service::~service()
   /** \bug On Windows, need to uninitialise COM. */
 }
 
+indexer service::create_indexer(boost::filesystem::path const& f) const
+{
+  return indexer(f);
+}
+
 }
 

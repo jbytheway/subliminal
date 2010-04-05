@@ -1,2 +1,3 @@
+SOURCE_DIRS = detail
 BIN = libffmsxx.la
 LIBS = -lffms2

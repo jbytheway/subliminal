@@ -5,6 +5,7 @@
 #include <optimal/optionsparser.hpp>
 
 #include <ffmsxx/service.hpp>
+#include <ffmsxx/get_single_video_source.hpp>
 
 namespace {
 
@@ -84,6 +85,8 @@ int main(int argc, char** argv)
   }
 
   ffmsxx::service ffms;
+
+  auto raw_indexer = ffmsxx::get_single_video_source(ffms, options.raw);
 
   return 0;
 }
