@@ -1,6 +1,8 @@
 #include <ffmsxx/video_source.hpp>
 
 #include <ffmsxx/index.hpp>
+#include <ffmsxx/video_dimensions.hpp>
+#include <ffmsxx/video_frame.hpp>
 #include <ffmsxx/detail/error_info.hpp>
 
 namespace ffmsxx {
@@ -29,6 +31,42 @@ video_source::video_source(
 }
 
 video_source::~video_source() = default;
+
+int video_source::num_frames() const
+{
+  return FFMS_GetVideoProperties(impl_->raw)->NumFrames;
+}
+
+video_frame video_source::frame(int n) const
+{
+  assert(n >= 0);
+  assert(n < num_frames());
+  detail::error_info e;
+  auto f = FFMS_GetFrame(impl_->raw, n, e.raw());
+  e.throw_if_null(f);
+  return video_frame(f);
+}
+
+video_dimensions video_source::encoded_dimensions() const
+{
+  assert(num_frames() > 0);
+  auto f = frame(0);
+  return f.encoded_dimensions();
+}
+
+void video_source::set_output_format(
+  pixel_formats const formats,
+  video_dimensions const& dims,
+  resizer const resize
+)
+{
+  detail::error_info e;
+  int ret = FFMS_SetOutputFormatV(
+    impl_->raw, formats.raw(), dims.width(), dims.height(),
+    resizer_to_raw(resize), e.raw()
+  );
+  e.throw_if(ret);
+}
 
 }
 

@@ -12,11 +12,16 @@ error_info::error_info()
   raw_.SubType = FFMS_ERROR_SUCCESS;
 }
 
-void error_info::throw_if_null(void* p)
+void error_info::throw_if(bool b)
 {
-  if (!p) {
+  if (b) {
     throw error(message);
   }
+}
+
+void error_info::throw_if_null(void const* p)
+{
+  throw_if(!p);
 }
 
 }}

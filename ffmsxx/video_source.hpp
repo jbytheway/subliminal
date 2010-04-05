@@ -6,6 +6,8 @@
 
 #include <ffmsxx/fwd.hpp>
 #include <ffmsxx/seek.hpp>
+#include <ffmsxx/pixel_formats.hpp>
+#include <ffmsxx/resizer.hpp>
 
 namespace ffmsxx {
 
@@ -19,6 +21,15 @@ class video_source : boost::noncopyable {
     );
     video_source(video_source&&);
     ~video_source();
+
+    int num_frames() const;
+    video_frame frame(int) const;
+    video_dimensions encoded_dimensions() const;
+    void set_output_format(
+      pixel_formats const,
+      video_dimensions const&,
+      resizer const
+    );
   private:
     struct impl;
     std::unique_ptr<impl> impl_;

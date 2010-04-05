@@ -6,6 +6,9 @@ namespace ffmsxx {
 class service;
 class index;
 class indexer;
+class video_dimensions;
+class video_source;
+class video_frame;
 
 }
 

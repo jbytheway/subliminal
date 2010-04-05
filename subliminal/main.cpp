@@ -7,6 +7,8 @@
 #include <ffmsxx/service.hpp>
 #include <ffmsxx/get_single_video_source.hpp>
 
+#include "extract_subtitles.hpp"
+
 namespace {
 
   struct Options {
@@ -86,7 +88,10 @@ int main(int argc, char** argv)
 
   ffmsxx::service ffms;
 
-  auto raw_indexer = ffmsxx::get_single_video_source(ffms, options.raw);
+  auto raw_source = ffmsxx::get_single_video_source(ffms, options.raw);
+  auto sub_source = ffmsxx::get_single_video_source(ffms, options.subs);
+
+  subliminal::extract_subtitles(raw_source, sub_source);
 
   return 0;
 }

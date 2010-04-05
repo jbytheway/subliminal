@@ -12,7 +12,8 @@ class error_info : boost::noncopyable {
     error_info();
 
     FFMS_ErrorInfo* raw() { return &raw_; }
-    void throw_if_null(void*);
+    void throw_if(bool);
+    void throw_if_null(void const*);
   private:
     char message[1024];
     FFMS_ErrorInfo raw_;
