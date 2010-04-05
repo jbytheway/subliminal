@@ -26,7 +26,7 @@ namespace {
 "  subliminal [OPTIONS] --raw V1 --subs V2\n"
 "\n"
 "  -h, --help   Display this message.\n"
-"  -q, --quiet  Supress various messages.\n"
+"  -q, --quiet  Suppress various messages.\n"
 "  -r, --raw    Version of the video without subs.\n"
 "  -s, --subs   Version of the video with subs.\n"
 << std::endl;
