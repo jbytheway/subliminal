@@ -3,6 +3,7 @@
   <!-- interface-requires gtk+ 2.16 -->
   <!-- interface-naming-policy project-wide -->
   <widget class="GtkWindow" id="MainWindow">
+    <property name="title" translatable="yes">Subliminal</property>
     <child>
       <widget class="GtkDrawingArea" id="Drawing1">
         <property name="visible">True</property>
