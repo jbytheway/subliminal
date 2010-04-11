@@ -14,8 +14,8 @@ class gtk_feedback : public visual_feedback {
   public:
     gtk_feedback(boost::filesystem::path dataPath, std::ostream&);
     ~gtk_feedback();
-    virtual void set_dimensions(ffmsxx::video_dimensions const&);
     virtual void show(ffmsxx::video_frame const&);
+    virtual void end();
   private:
     struct impl;
     std::unique_ptr<impl> impl_;

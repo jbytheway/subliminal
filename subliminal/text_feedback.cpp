@@ -6,14 +6,14 @@
 
 namespace subliminal {
 
-void text_feedback::set_dimensions(ffmsxx::video_dimensions const& dims)
-{
-  out_ << "dimensions set to " << dims << std::endl;
-}
-
 void text_feedback::show(ffmsxx::video_frame const&)
 {
   out_ << "[frame]" << std::endl;
+}
+
+void text_feedback::end()
+{
+  out_ << "[end]" << std::endl;
 }
 
 }

@@ -25,8 +25,6 @@ void extract_subtitles(
   raw.set_output_format(formats, subs_dims, ffmsxx::resizer::bicubic);
   subs.set_output_format(formats, subs_dims, ffmsxx::resizer::bicubic);
 
-  feedback.set_dimensions(subs_dims);
-
   auto frame = raw.frame(0);
 
   feedback.show(frame);

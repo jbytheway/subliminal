@@ -8,12 +8,13 @@ namespace ffmsxx {
 
 class video_dimensions {
   public:
+    video_dimensions() : width_{}, height_{} {}
     video_dimensions(int width, int height) : width_(width), height_(height) {
       assert(width > 0);
       assert(height > 0);
     }
-    int width() const { return width_; }
-    int height() const { return height_; }
+    int width() const { assert(width_ > 0); return width_; }
+    int height() const { assert(height_ > 0); return height_; }
   private:
     int width_;
     int height_;

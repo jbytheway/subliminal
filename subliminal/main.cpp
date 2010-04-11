@@ -126,6 +126,8 @@ int main(int argc, char** argv)
 
   subliminal::extract_subtitles(raw_source, sub_source, feedback);
 
+  feedback.end();
+
   return 0;
 }
 
