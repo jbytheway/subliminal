@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include <boost/algorithm/string/join.hpp>
+#include <boost/filesystem/operations.hpp>
 
 #include <optimal/optionsparser.hpp>
 
@@ -9,6 +10,8 @@
 
 #include "extract_subtitles.hpp"
 #include "text_feedback.hpp"
+#include "gtk_feedback.hpp"
+#include "fatal.hpp"
 
 namespace {
 
@@ -18,6 +21,7 @@ namespace {
       quiet{}
     {}
 
+    boost::filesystem::path data;
     bool help;
     bool quiet;
     boost::filesystem::path raw;
@@ -32,11 +36,14 @@ namespace {
 "\n"
 "  subliminal [OPTIONS] --raw V1 --subs V2\n"
 "\n"
-"  -h, --help    Display this message.\n"
-"  -o, --output  Save results in this file.  Default: stdout.\n"
-"  -q, --quiet   Suppress various messages.\n"
-"  -r, --raw     Version of the video without subs.\n"
-"  -s, --subs    Version of the video with subs.\n"
+"  -d, --data DATA  Look for program data in DATA.  Default is to search for\n"
+"                   a directory named 'data' in the executable's directory\n"
+"                   or any parent thereof.\n"
+"  -h, --help       Display this message.\n"
+"  -o, --output     Save results in this file.  Default: stdout.\n"
+"  -q, --quiet      Suppress various messages.\n"
+"  -r, --raw V1     V1 is the video without subs.\n"
+"  -s, --subs V2    V2 is the video with subs.\n"
 << std::endl;
   }
 
@@ -44,6 +51,7 @@ namespace {
   {
     optimal::OptionsParser parser;
     Options results;
+    parser.addOption("data",   'd', &results.data);
     parser.addOption("help",   'h', &results.help);
     parser.addOption("output", 'o', &results.output);
     parser.addOption("quiet",  'q', &results.quiet);
@@ -65,6 +73,8 @@ namespace {
 
 int main(int argc, char** argv)
 {
+  auto cwd = boost::filesystem::initial_path();
+
   Options options = get_options(argc, argv);
 
   if (options.help) {
@@ -87,11 +97,32 @@ int main(int argc, char** argv)
     return EXIT_FAILURE;
   }
 
+  boost::filesystem::path dataPath = options.data;
+
+  if (dataPath.empty()) {
+    boost::filesystem::path exe(argv[0]);
+    if (!exe.has_root_path()) {
+      /** \bug Searches too many directories when exe contains '..' members */
+      exe = cwd/exe;
+    }
+    boost::filesystem::path exePath = exe.parent_path();
+    while (!(exePath.empty() || boost::filesystem::exists(exePath/"data"))) {
+      exePath = exePath.parent_path();
+    }
+    if (exePath.empty()) {
+      SUBLIMINAL_FATAL(
+        "couldn't locate data directory in any parent of exe directory.  "
+        "Searched from " << exePath.parent_path()
+      );
+    }
+    dataPath = exePath/"data";
+  }
+
   ffmsxx::service ffms;
 
   auto raw_source = ffmsxx::get_single_video_source(ffms, options.raw);
   auto sub_source = ffmsxx::get_single_video_source(ffms, options.subs);
-  subliminal::text_feedback feedback(std::cout);
+  subliminal::gtk_feedback feedback(dataPath, std::cout);
 
   subliminal::extract_subtitles(raw_source, sub_source, feedback);
 
