@@ -28,11 +28,14 @@ struct gtk_feedback::impl {
   }
 
   struct ThreadObj : boost::noncopyable {
+    static const int num_images = 3;
+
     ThreadObj(boost::filesystem::path dataPath, std::ostream& o) :
       initted{false},
       data_path(std::move(dataPath)),
       out(o),
-      image1{}
+      rgb24("rgb24"),
+      images{ NULL, NULL, NULL }
     {}
 
     void operator()() {
@@ -49,11 +52,18 @@ struct gtk_feedback::impl {
         Gnome::Glade::Xml::create(gladePath.file_string());
       Gtk::Window* window = NULL;
       xml->get_widget("MainWindow", window);
-      xml->get_widget("Image1", image1);
-      assert(image1);
-      pixbuf1_show_signal.connect(
-        sigc::mem_fun(this, &ThreadObj::update_image)
-      );
+      BOOST_MPL_ASSERT_RELATION(num_images, ==, 3);
+      xml->get_widget("Image0", images[0]);
+      xml->get_widget("Image1", images[1]);
+      xml->get_widget("Image2", images[2]);
+      assert(images[0]);
+      assert(images[1]);
+      assert(images[2]);
+      for (int i=0; i<num_images; ++i) {
+        pixbuf_show_signals[i].connect(
+          sigc::bind(sigc::mem_fun(this, &ThreadObj::update_image), i)
+        );
+      }
       end_signal.connect(
         sigc::mem_fun(this, &ThreadObj::close_window)
       );
@@ -62,8 +72,10 @@ struct gtk_feedback::impl {
       out << "GTK thread completed" << std::endl;
     }
 
-    void show(ffmsxx::video_frame const& frame) {
-      if (frame.converted_pixel_format() != ffmsxx::pixel_format("rgb24")) {
+    void show(ffmsxx::video_frame const& frame, int image) {
+      assert(image >= 0);
+      assert(image < num_images);
+      if (frame.converted_pixel_format() != rgb24) {
         SUBLIMINAL_FATAL("wrong colourspace");
       }
       if (frame.data_stride(0) == 0) {
@@ -72,18 +84,18 @@ struct gtk_feedback::impl {
       /** \bug Maybe should use condition variable instead of spin-locking?
       */
       while (!initted) {}
-      pixbuf1.create(
+      pixbufs[image].create(
         frame.data(0),
         false /*has_alpha*/,
         frame.scaled_dimensions(),
         frame.data_stride(0),
-        pixbuf1_show_signal
+        pixbuf_show_signals[image]
       );
     }
 
-    void update_image() {
+    void update_image(int image) {
       out << "updating image\n";
-      pixbuf1.make_image(*image1);
+      pixbufs[image].make_image(*images[image]);
     }
 
     void end() {
@@ -99,9 +111,10 @@ struct gtk_feedback::impl {
     bool initted;
     boost::filesystem::path data_path;
     std::ostream& out;
-    Gtk::Image* image1;
-    prepixbuf pixbuf1;
-    Glib::Dispatcher pixbuf1_show_signal;
+    ffmsxx::pixel_format rgb24;
+    Gtk::Image* images[num_images];
+    prepixbuf pixbufs[num_images];
+    Glib::Dispatcher pixbuf_show_signals[num_images];
     Glib::Dispatcher end_signal;
   };
 
@@ -119,9 +132,9 @@ gtk_feedback::gtk_feedback(
 
 gtk_feedback::~gtk_feedback() = default;
 
-void gtk_feedback::show(ffmsxx::video_frame const& frame)
+void gtk_feedback::show(ffmsxx::video_frame const& frame, int image)
 {
-  impl_->thread_obj.show(frame);
+  impl_->thread_obj.show(frame, image);
 }
 
 void gtk_feedback::end()

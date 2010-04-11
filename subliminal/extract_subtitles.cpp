@@ -25,9 +25,13 @@ void extract_subtitles(
   raw.set_output_format(formats, subs_dims, ffmsxx::resizer::bicubic);
   subs.set_output_format(formats, subs_dims, ffmsxx::resizer::bicubic);
 
-  auto frame = raw.frame(0);
+  auto raw_frame = raw.frame(0);
+  auto sub_frame = subs.frame(0);
 
-  feedback.show(frame);
+  feedback.show(raw_frame, 0);
+  feedback.show(sub_frame, 1);
+
+  sleep(1);
 }
 
 }
