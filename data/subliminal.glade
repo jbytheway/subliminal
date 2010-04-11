@@ -5,8 +5,9 @@
   <widget class="GtkWindow" id="MainWindow">
     <property name="title" translatable="yes">Subliminal</property>
     <child>
-      <widget class="GtkDrawingArea" id="Drawing1">
+      <widget class="GtkImage" id="Image1">
         <property name="visible">True</property>
+        <property name="stock">gtk-missing-image</property>
       </widget>
     </child>
   </widget>

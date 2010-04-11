@@ -1,6 +1,7 @@
 #ifndef FFMSXX__VIDEO_FRAME_HPP
 #define FFMSXX__VIDEO_FRAME_HPP
 
+#include <cstdint>
 #include <memory>
 
 #include <ffmsxx/fwd.hpp>
@@ -13,6 +14,11 @@ class video_frame {
     ~video_frame();
 
     video_dimensions encoded_dimensions() const;
+    video_dimensions scaled_dimensions() const;
+    pixel_format converted_pixel_format() const;
+
+    uint8_t const* data(int plane) const;
+    int data_stride(int plane) const;
   private:
     friend class video_source;
 
