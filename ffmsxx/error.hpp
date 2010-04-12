@@ -5,7 +5,7 @@
 
 namespace ffmsxx {
 
-class error : std::runtime_error {
+class error : public std::runtime_error {
   public:
     error(std::string const& m) : std::runtime_error(m) {}
 };
