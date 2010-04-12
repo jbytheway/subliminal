@@ -3,6 +3,7 @@
 
 #include <boost/noncopyable.hpp>
 #include <boost/filesystem/path.hpp>
+#include <boost/rational.hpp>
 
 #include <ffmsxx/fwd.hpp>
 #include <ffmsxx/seek.hpp>
@@ -25,6 +26,7 @@ class video_source : boost::noncopyable {
     int num_frames() const;
     video_frame frame(int) const;
     video_dimensions encoded_dimensions() const;
+    boost::rational<int64_t> time_base() const;
     void set_output_format(
       pixel_formats const,
       video_dimensions const&,

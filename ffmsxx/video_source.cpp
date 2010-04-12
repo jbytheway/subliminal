@@ -51,6 +51,13 @@ video_dimensions video_source::encoded_dimensions() const
   return f.encoded_dimensions();
 }
 
+boost::rational<int64_t> video_source::time_base() const
+{
+  auto const track = FFMS_GetTrackFromVideo(impl_->raw);
+  auto const timeBase = FFMS_GetTimeBase(track);
+  return boost::rational<int64_t>(timeBase->Num, timeBase->Den);
+}
+
 void video_source::set_output_format(
   pixel_formats const formats,
   video_dimensions const& dims,

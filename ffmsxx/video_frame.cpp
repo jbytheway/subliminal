@@ -14,6 +14,12 @@ struct video_frame::impl {
   FFMS_FrameInfo info;
 };
 
+video_frame& video_frame::operator=(video_frame&& r)
+{
+  impl_ = std::move(r.impl_);
+  return *this;
+}
+
 video_frame::~video_frame() = default;
 
 video_dimensions video_frame::encoded_dimensions() const
@@ -52,6 +58,12 @@ int video_frame::data_stride(int plane) const
 int64_t video_frame::pts() const
 {
   return impl_->info.PTS;
+}
+
+boost::rational<int64_t>
+video_frame::time(boost::rational<int64_t> const& time_base) const
+{
+  return time_base*pts();
 }
 
 video_frame::video_frame(FFMS_VideoSource* video_source, int n) :

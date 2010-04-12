@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <memory>
 
+#include <boost/rational.hpp>
+
 #include <ffmsxx/fwd.hpp>
 
 struct FFMS_VideoSource;
@@ -13,6 +15,8 @@ namespace ffmsxx {
 class video_frame {
   public:
     video_frame(video_frame&&);
+    video_frame& operator=(video_frame const&) = delete;
+    video_frame& operator=(video_frame&&);
     ~video_frame();
 
     video_dimensions encoded_dimensions() const;
@@ -23,6 +27,9 @@ class video_frame {
     int data_stride(int plane) const;
 
     int64_t pts() const;
+
+    boost::rational<int64_t>
+    time(boost::rational<int64_t> const& time_base) const;
   private:
     friend class video_source;
 

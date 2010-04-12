@@ -25,11 +25,32 @@ void extract_subtitles(
   raw.set_output_format(formats, subs_dims, ffmsxx::resizer::bicubic);
   subs.set_output_format(formats, subs_dims, ffmsxx::resizer::bicubic);
 
-  auto raw_frame = raw.frame(0);
-  auto sub_frame = subs.frame(0);
+  auto raw_time_base = raw.time_base();
+  auto subs_time_base = subs.time_base();
 
-  feedback.show(raw_frame, 0);
-  feedback.show(sub_frame, 1);
+  int raw_frame_index = 0;
+  auto last_raw_frame = raw.frame(raw_frame_index);
+  auto this_raw_frame = raw.frame(++raw_frame_index);
+
+  for (int sub_frame_index = 0; sub_frame_index < subs.num_frames();
+      ++sub_frame_index) {
+    auto subs_frame = subs.frame(sub_frame_index);
+    bool done = false;
+    while (this_raw_frame.time(raw_time_base) <
+      subs_frame.time(subs_time_base)) {
+      last_raw_frame = std::move(this_raw_frame);
+      ++raw_frame_index;
+      if (raw_frame_index >= raw.num_frames()) {
+        done = true;
+        break;
+      }
+      this_raw_frame = raw.frame(raw_frame_index);
+    }
+    if (done) break;
+
+    feedback.show(this_raw_frame, 0);
+    feedback.show(subs_frame, 1);
+  }
 
   sleep(1);
 }
