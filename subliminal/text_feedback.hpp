@@ -11,6 +11,7 @@ class text_feedback : public visual_feedback {
   public:
     text_feedback(std::ostream& out) : out_(out) {}
     virtual void show(ffmsxx::video_frame const&, int image);
+    virtual void progress(int pos, int outof);
   private:
     std::ostream& out_;
 };

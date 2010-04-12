@@ -132,6 +132,7 @@ struct gtk_feedback::impl {
 gtk_feedback::gtk_feedback(
   boost::filesystem::path dataPath, std::ostream& out
 ) :
+  text_feedback(out),
   impl_(new impl(std::move(dataPath), out))
 {
 }

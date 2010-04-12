@@ -11,6 +11,7 @@ class visual_feedback : boost::noncopyable {
   public:
     virtual ~visual_feedback() = 0;
     virtual void show(ffmsxx::video_frame const&, int image) = 0;
+    virtual void progress(int pos, int outof) = 0;
   protected:
     visual_feedback() = default;
 };

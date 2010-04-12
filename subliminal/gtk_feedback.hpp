@@ -6,11 +6,11 @@
 
 #include <boost/filesystem/path.hpp>
 
-#include "visual_feedback.hpp"
+#include "text_feedback.hpp"
 
 namespace subliminal {
 
-class gtk_feedback : public visual_feedback {
+class gtk_feedback : public text_feedback {
   public:
     gtk_feedback(boost::filesystem::path dataPath, std::ostream&);
     ~gtk_feedback();

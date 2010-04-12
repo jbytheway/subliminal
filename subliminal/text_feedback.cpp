@@ -8,7 +8,12 @@ namespace subliminal {
 
 void text_feedback::show(ffmsxx::video_frame const&, int image)
 {
-  out_ << "[frame " << image << "]" << std::endl;
+  out_ << "\n[frame " << image << "]" << std::endl;
+}
+
+void text_feedback::progress(int pos, int outof)
+{
+  out_ << pos << '/' << outof << '\r' << std::flush;
 }
 
 }

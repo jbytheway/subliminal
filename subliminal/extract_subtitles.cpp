@@ -50,6 +50,7 @@ void extract_subtitles(
 
     feedback.show(this_raw_frame, 0);
     feedback.show(subs_frame, 1);
+    feedback.progress(sub_frame_index, subs.num_frames());
   }
 
   sleep(1);
