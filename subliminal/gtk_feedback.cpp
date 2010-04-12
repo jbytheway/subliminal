@@ -94,7 +94,6 @@ struct gtk_feedback::impl {
     }
 
     void update_image(int image) {
-      out << "updating image\n";
       pixbufs[image].make_image(*images[image]);
     }
 
