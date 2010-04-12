@@ -21,6 +21,8 @@ class video_frame {
 
     uint8_t const* data(int plane) const;
     int data_stride(int plane) const;
+
+    int64_t pts() const;
   private:
     friend class video_source;
 

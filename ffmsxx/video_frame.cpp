@@ -4,6 +4,7 @@
 
 #include <ffmsxx/video_dimensions.hpp>
 #include <ffmsxx/pixel_format.hpp>
+#include <ffmsxx/error.hpp>
 #include <ffmsxx/detail/error_info.hpp>
 
 namespace ffmsxx {
@@ -46,6 +47,11 @@ int video_frame::data_stride(int plane) const
   assert(plane >= 0);
   assert(plane < 4);
   return impl_->frame->Linesize[plane];
+}
+
+int64_t video_frame::pts() const
+{
+  return impl_->info->PTS;
 }
 
 video_frame::video_frame(FFMS_VideoSource* video_source, int n) :
