@@ -33,9 +33,11 @@ struct gtk_feedback::impl {
 
     ThreadObj(boost::filesystem::path dataPath, std::ostream& o) :
       initted{false},
+      shutting_down{false},
       data_path(std::move(dataPath)),
       out(o),
       rgb24("rgb24"),
+      window{NULL},
       images{ NULL, NULL, NULL }
     {}
 
@@ -51,7 +53,6 @@ struct gtk_feedback::impl {
       }
       Glib::RefPtr<Gnome::Glade::Xml> xml =
         Gnome::Glade::Xml::create(gladePath.file_string());
-      Gtk::Window* window = NULL;
       xml->get_widget("MainWindow", window);
       BOOST_MPL_ASSERT_RELATION(num_images, ==, 3);
       xml->get_widget("Image0", images[0]);
@@ -69,7 +70,8 @@ struct gtk_feedback::impl {
         sigc::mem_fun(this, &ThreadObj::close_window)
       );
       initted = true;
-      Gtk::Main::run(*window);
+      window->show();
+      Gtk::Main::run();
       out << "GTK thread completed" << std::endl;
     }
 
@@ -85,6 +87,7 @@ struct gtk_feedback::impl {
       /** \bug Maybe should use condition variable instead of spin-locking?
       */
       while (!initted) {}
+      if (shutting_down || !window->get_visible()) return;
       pixbufs[image].create(
         frame.data(0),
         false /*has_alpha*/,
@@ -101,6 +104,7 @@ struct gtk_feedback::impl {
     void end() {
       /** \bug Maybe should use condition variable instead of spin-locking? */
       while (!initted) {}
+      shutting_down = true;
       end_signal();
     }
 
@@ -109,9 +113,11 @@ struct gtk_feedback::impl {
     }
 
     bool initted;
+    bool shutting_down;
     boost::filesystem::path data_path;
     std::ostream& out;
     ffmsxx::pixel_format rgb24;
+    Gtk::Window* window;
     Gtk::Image* images[num_images];
     prepixbuf pixbufs[num_images];
     Glib::Dispatcher pixbuf_show_signals[num_images];
