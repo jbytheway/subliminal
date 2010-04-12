@@ -5,11 +5,25 @@ OUTS := $(addsuffix .out,$(BASES))
 
 test-nonrecursive: $(OUTS)
 
-$(OUTS): %.out: %.subbed ../subliminal
-	../subliminal --quiet --raw root_video.avi --subs $< --output $@
+$(OUTS): %.out: %.subbed unsubbed_video.avi ../subliminal
+	../subliminal --quiet --raw unsubbed_video.avi --subs $< --output $@
 
-$(SUBBEDS): %.subbed: %.params root_video.avi transcode.sh
+$(SUBBEDS): %.subbed: %.params subbed_video.avi transcode.sh
 	./transcode.sh $<
+
+# Mencoder doesn't support ass, so in order to hardsub we use mplayer with -vo
+# yuv4mpeg.  Unfortunately that messes up frame timings so we need to do the
+# same thing to produce an unsubbed version with equally messed up frame
+# timings to get proper sync.  In the long term it would be nice if subliminal
+# coped with desync properly, but it doesn't yet.
+
+subbed_video.avi: root_video.avi subs.ass
+	mplayer -benchmark -ass -sub subs.ass -vo yuv4mpeg:file="$@.mpeg" "$<"
+	mencoder -nosound -ovc lavc -o "$@" "$@.mpeg"
+
+unsubbed_video.avi: root_video.avi subs.ass
+	mplayer -benchmark -vo yuv4mpeg:file="$@.mpeg" "$<"
+	mencoder -nosound -ovc lavc -o "$@" "$@.mpeg"
 
 clean:
 	rm -f *.subbed *.out

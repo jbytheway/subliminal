@@ -1,2 +1,4 @@
 *.subbed
 *.out
+/subbed_video.avi*
+/unsubbed_video.avi*

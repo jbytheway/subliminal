@@ -1,2 +1,2 @@
-MENCODER_ARGS="-oac copy -ovc copy"
+MENCODER_ARGS="-oac copy -ovc lavc"
 
