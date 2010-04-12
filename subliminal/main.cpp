@@ -28,8 +28,8 @@ namespace {
     bool gtk;
     bool help;
     bool quiet;
-    boost::filesystem::path raw;
-    boost::filesystem::path subs;
+    std::string raw;
+    std::string subs;
     boost::filesystem::path output;
   };
 
