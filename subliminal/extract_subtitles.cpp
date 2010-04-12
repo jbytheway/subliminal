@@ -48,7 +48,13 @@ void extract_subtitles(
     }
     if (done) break;
 
-    feedback.show(this_raw_frame, 0);
+    auto diff_to_last =
+      abs(subs_frame.time(subs_time_base)-last_raw_frame.time(raw_time_base));
+    auto diff_to_this =
+      abs(subs_frame.time(subs_time_base)-this_raw_frame.time(raw_time_base));
+    ffmsxx::video_frame& best_raw_frame =
+      ( diff_to_last < diff_to_this ? last_raw_frame : this_raw_frame );
+    feedback.show(best_raw_frame, 0);
     feedback.show(subs_frame, 1);
     feedback.progress(sub_frame_index, subs.num_frames());
   }
