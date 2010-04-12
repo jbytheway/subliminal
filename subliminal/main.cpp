@@ -7,6 +7,7 @@
 #include <optimal/optionsparser.hpp>
 
 #include <ffmsxx/service.hpp>
+#include <ffmsxx/error.hpp>
 #include <ffmsxx/get_single_video_source.hpp>
 
 #include "extract_subtitles.hpp"
@@ -123,21 +124,24 @@ int main(int argc, char** argv)
     dataPath = exePath/"data";
   }
 
-  ffmsxx::service ffms;
+  try {
+    ffmsxx::service ffms;
 
-  auto raw_source = ffmsxx::get_single_video_source(ffms, options.raw);
-  auto sub_source = ffmsxx::get_single_video_source(ffms, options.subs);
+    auto raw_source = ffmsxx::get_single_video_source(ffms, options.raw);
+    auto sub_source = ffmsxx::get_single_video_source(ffms, options.subs);
 
-  boost::scoped_ptr<subliminal::visual_feedback> feedback;
-  if (options.gtk) {
-    feedback.reset(new subliminal::gtk_feedback(dataPath, std::cout));
-  } else {
-    feedback.reset(new subliminal::text_feedback(std::cout));
+    boost::scoped_ptr<subliminal::visual_feedback> feedback;
+    if (options.gtk) {
+      feedback.reset(new subliminal::gtk_feedback(dataPath, std::cout));
+    } else {
+      feedback.reset(new subliminal::text_feedback(std::cout));
+    }
+
+    subliminal::extract_subtitles(raw_source, sub_source, *feedback);
+  } catch (ffmsxx::error const& e) {
+    std::cerr << "Video error: " << e.what() << std::endl;
+    return 1;
   }
-
-  subliminal::extract_subtitles(raw_source, sub_source, *feedback);
-
-  feedback->end();
 
   return 0;
 }

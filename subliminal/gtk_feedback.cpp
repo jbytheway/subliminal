@@ -24,6 +24,7 @@ struct gtk_feedback::impl {
 
   ~impl()
   {
+    thread_obj.end();
     gtk_thread.join();
   }
 
@@ -134,11 +135,6 @@ gtk_feedback::~gtk_feedback() = default;
 void gtk_feedback::show(ffmsxx::video_frame const& frame, int image)
 {
   impl_->thread_obj.show(frame, image);
-}
-
-void gtk_feedback::end()
-{
-  impl_->thread_obj.end();
 }
 
 }
