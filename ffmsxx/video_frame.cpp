@@ -11,7 +11,7 @@ namespace ffmsxx {
 
 struct video_frame::impl {
   FFMS_Frame const* frame;
-  FFMS_FrameInfo const* info;
+  FFMS_FrameInfo info;
 };
 
 video_frame::~video_frame() = default;
@@ -51,7 +51,7 @@ int video_frame::data_stride(int plane) const
 
 int64_t video_frame::pts() const
 {
-  return impl_->info->PTS;
+  return impl_->info.PTS;
 }
 
 video_frame::video_frame(FFMS_VideoSource* video_source, int n) :
@@ -60,11 +60,14 @@ video_frame::video_frame(FFMS_VideoSource* video_source, int n) :
   detail::error_info e;
   impl_->frame = FFMS_GetFrame(video_source, n, e.raw());
   e.throw_if_null(impl_->frame);
+  // It seems that both the following return pointers but retain ownership
+  // thereof
   auto const track = FFMS_GetTrackFromVideo(video_source);
-  impl_->info = FFMS_GetFrameInfo(track, n);
-  if (impl_->info == NULL) {
-    throw error("unknown error getingframe info");
+  auto const info = FFMS_GetFrameInfo(track, n);
+  if (info == NULL) {
+    throw error("unknown error geting frame info");
   }
+  impl_->info = *info;
 }
 
 }
