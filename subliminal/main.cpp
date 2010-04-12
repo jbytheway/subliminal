@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include <boost/scoped_ptr.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/filesystem/operations.hpp>
 
@@ -17,11 +18,13 @@ namespace {
 
   struct Options {
     Options() :
+      gtk{true},
       help{},
       quiet{}
     {}
 
     boost::filesystem::path data;
+    bool gtk;
     bool help;
     bool quiet;
     boost::filesystem::path raw;
@@ -39,6 +42,7 @@ namespace {
 "  -d, --data DATA  Look for program data in DATA.  Default is to search for\n"
 "                   a directory named 'data' in the executable's directory\n"
 "                   or any parent thereof.\n"
+"  -g-, --no-gtk    Don't use GTK windows for illustrating progress.\n"
 "  -h, --help       Display this message.\n"
 "  -o, --output     Save results in this file.  Default: stdout.\n"
 "  -q, --quiet      Suppress various messages.\n"
@@ -52,6 +56,7 @@ namespace {
     optimal::OptionsParser parser;
     Options results;
     parser.addOption("data",   'd', &results.data);
+    parser.addOption("gtk",    'g', &results.gtk);
     parser.addOption("help",   'h', &results.help);
     parser.addOption("output", 'o', &results.output);
     parser.addOption("quiet",  'q', &results.quiet);
@@ -122,11 +127,17 @@ int main(int argc, char** argv)
 
   auto raw_source = ffmsxx::get_single_video_source(ffms, options.raw);
   auto sub_source = ffmsxx::get_single_video_source(ffms, options.subs);
-  subliminal::gtk_feedback feedback(dataPath, std::cout);
 
-  subliminal::extract_subtitles(raw_source, sub_source, feedback);
+  boost::scoped_ptr<subliminal::visual_feedback> feedback;
+  if (options.gtk) {
+    feedback.reset(new subliminal::gtk_feedback(dataPath, std::cout));
+  } else {
+    feedback.reset(new subliminal::text_feedback(std::cout));
+  }
 
-  feedback.end();
+  subliminal::extract_subtitles(raw_source, sub_source, *feedback);
+
+  feedback->end();
 
   return 0;
 }
