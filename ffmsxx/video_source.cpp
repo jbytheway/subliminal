@@ -41,10 +41,7 @@ video_frame video_source::frame(int n) const
 {
   assert(n >= 0);
   assert(n < num_frames());
-  detail::error_info e;
-  auto f = FFMS_GetFrame(impl_->raw, n, e.raw());
-  e.throw_if_null(f);
-  return video_frame(f);
+  return video_frame(impl_->raw, n);
 }
 
 video_dimensions video_source::encoded_dimensions() const

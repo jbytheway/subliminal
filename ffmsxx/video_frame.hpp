@@ -6,6 +6,8 @@
 
 #include <ffmsxx/fwd.hpp>
 
+struct FFMS_VideoSource;
+
 namespace ffmsxx {
 
 class video_frame {
@@ -22,7 +24,7 @@ class video_frame {
   private:
     friend class video_source;
 
-    video_frame(const void* frame);
+    video_frame(FFMS_VideoSource*, int n);
 
     struct impl;
     std::unique_ptr<impl> impl_;
