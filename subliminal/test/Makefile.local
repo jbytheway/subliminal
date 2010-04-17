@@ -26,5 +26,5 @@ unsubbed_video.avi: root_video.avi subs.ass
 	mencoder -nosound -ovc lavc -o "$@" "$@.mpeg"
 
 clean:
-	rm -f *.subbed *.out
+	rm -f *.subbed *.out unsubbed_video.avi subbed_video.avi
 
