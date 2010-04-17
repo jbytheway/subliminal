@@ -1,10 +1,59 @@
 #include "extract_subtitles.hpp"
 
+#include <boost/mpl/vector_c.hpp>
+#include <boost/gil/image_view_factory.hpp>
+#include <boost/gil/image_view.hpp>
+#include <boost/gil/image.hpp>
+#include <boost/gil/typedefs.hpp>
+
 #include <ffmsxx/video_source.hpp>
 #include <ffmsxx/video_dimensions.hpp>
 #include <ffmsxx/video_frame.hpp>
+#include <ffmsxx/make_gil_view.hpp>
+
+#include "fatal.hpp"
 
 namespace subliminal {
+
+namespace gil = boost::gil;
+
+namespace {
+
+  struct half_difference {
+    int operator()(gil::gray8_pixel_t in1, gil::gray8_pixel_t in2) const {
+      return (in1 - in2) / 2;
+    }
+  };
+
+  struct half_difference_luminosity {
+    int operator()(gil::rgb8_pixel_t in1, gil::rgb8_pixel_t in2) const {
+      boost::gil::color_convert_deref_fn<
+        const boost::gil::rgb8c_pixel_t&,
+        gil::gray8_pixel_t
+      > cc;
+      return (cc(in1) - cc(in2)) / 2;
+    }
+  };
+
+  void delta(
+    gil::gray8c_view_t const& in1,
+    gil::gray8c_view_t const& in2,
+    gil::gray8s_view_t const& out
+  )
+  {
+    gil::transform_pixels(in1, in2, out, half_difference());
+  }
+
+  void delta_luminosity(
+    gil::rgb8c_view_t const& in1,
+    gil::rgb8c_view_t const& in2,
+    gil::gray8s_view_t const& out
+  )
+  {
+    gil::transform_pixels(in1, in2, out, half_difference_luminosity());
+  }
+
+}
 
 void extract_subtitles(
   ffmsxx::video_source& raw,
@@ -56,6 +105,18 @@ void extract_subtitles(
       ( diff_to_last < diff_to_this ? last_raw_frame : this_raw_frame );
     feedback.show(best_raw_frame, 0);
     feedback.show(subs_frame, 1);
+
+    // Get Boost.GIL views on the images
+    auto raw_view = make_gil_view(best_raw_frame);
+    auto subs_view = make_gil_view(subs_frame);
+
+    // Copmute the delta of the two images
+    boost::gil::gray8s_image_t delta(subs_view.dimensions());
+    delta_luminosity(raw_view, subs_view, view(delta));
+
+    // Show the delta in slot 3
+    feedback.show(view(delta), 2);
+
     feedback.progress(sub_frame_index, subs.num_frames());
   }
 
