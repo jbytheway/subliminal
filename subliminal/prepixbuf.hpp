@@ -2,6 +2,7 @@
 #define SUBLIMINAL__PREPIXBUF_HPP
 
 #include <boost/scoped_ptr.hpp>
+#include <boost/scoped_array.hpp>
 #include <boost/thread/barrier.hpp>
 
 namespace subliminal {
@@ -15,9 +16,14 @@ class prepixbuf {
       int rowstride,
       Glib::Dispatcher& signal
     ) {
+      size_t const data_size = rowstride*dims.height();
+      boost::scoped_array<uint8_t> old(new uint8_t[data_size]);
+      // Need to ensure that old data_ remains valid until image has been
+      // reset, which is after barrier at bottom of this function
+      swap(old, data_);
       {
         boost::lock_guard<boost::mutex> scoped_lock(predata_mutex_);
-        data_ = data;
+        memcpy(&data_[0], data, data_size);
         has_alpha_ = has_alpha;
         dims_ = dims;
         rowstride_ = rowstride;
@@ -31,7 +37,7 @@ class prepixbuf {
     void make_image(Gtk::Image& image) {
       boost::lock_guard<boost::mutex> scoped_lock(predata_mutex_);
       auto pixbuf = Gdk::Pixbuf::create_from_data(
-          data_,
+          &data_[0],
           Gdk::COLORSPACE_RGB,
           has_alpha_,
           8 /*bits per sample*/,
@@ -43,7 +49,7 @@ class prepixbuf {
       barrier_->wait();
     }
   private:
-    const uint8_t* data_;
+    boost::scoped_array<uint8_t> data_;
     bool has_alpha_;
     ffmsxx::video_dimensions dims_;
     int rowstride_;

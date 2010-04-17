@@ -75,24 +75,19 @@ struct gtk_feedback::impl {
       out << "GTK thread completed" << std::endl;
     }
 
-    void show(ffmsxx::video_frame const& frame, int image) {
+    void show(boost::gil::rgb8c_view_t const& view, int image) {
       assert(image >= 0);
       assert(image < num_images);
-      if (frame.converted_pixel_format() != rgb24) {
-        SUBLIMINAL_FATAL("wrong colourspace");
-      }
-      if (frame.data_stride(0) == 0) {
-        SUBLIMINAL_FATAL("no frame data");
-      }
       /** \bug Maybe should use condition variable instead of spin-locking?
       */
       while (!initted) {}
       if (shutting_down || !window->get_visible()) return;
       pixbufs[image].create(
-        frame.data(0),
+        reinterpret_cast<uint8_t const*>(&*view.row_begin(0)),
         false /*has_alpha*/,
-        frame.scaled_dimensions(),
-        frame.data_stride(0),
+        ffmsxx::video_dimensions(view.width(), view.height()),
+        reinterpret_cast<uint8_t const*>(&*view.row_begin(1))-
+          reinterpret_cast<uint8_t const*>(&*view.row_begin(0)),
         pixbuf_show_signals[image]
       );
     }
@@ -139,9 +134,9 @@ gtk_feedback::gtk_feedback(
 
 gtk_feedback::~gtk_feedback() = default;
 
-void gtk_feedback::show(ffmsxx::video_frame const& frame, int image)
+void gtk_feedback::show_rgb(boost::gil::rgb8c_view_t const& view, int image)
 {
-  impl_->thread_obj.show(frame, image);
+  impl_->thread_obj.show(view, image);
 }
 
 }

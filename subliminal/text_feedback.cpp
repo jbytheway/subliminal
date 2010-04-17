@@ -6,7 +6,7 @@
 
 namespace subliminal {
 
-void text_feedback::show(ffmsxx::video_frame const&, int image)
+void text_feedback::show_rgb(boost::gil::rgb8c_view_t const&, int image)
 {
   out_ << "\n[frame " << image << "]" << std::endl;
 }

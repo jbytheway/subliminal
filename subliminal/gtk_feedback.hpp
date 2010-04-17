@@ -14,7 +14,7 @@ class gtk_feedback : public text_feedback {
   public:
     gtk_feedback(boost::filesystem::path dataPath, std::ostream&);
     ~gtk_feedback();
-    virtual void show(ffmsxx::video_frame const&, int image);
+    virtual void show_rgb(boost::gil::rgb8c_view_t const&, int image);
   private:
     struct impl;
     std::unique_ptr<impl> impl_;
