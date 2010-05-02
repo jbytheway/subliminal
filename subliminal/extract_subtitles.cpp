@@ -138,12 +138,15 @@ void extract_subtitles(
       auto raw_view = make_gil_view(*raw_frame);
       auto subs_view = make_gil_view(subs_frame);
 
+      auto dims = raw_view.dimensions();
+      assert(dims == subs_view.dimensions());
+
       // Apply chosen best transform to raw
-      boost::gil::gray8_image_t transformed(raw_view.dimensions());
+      boost::gil::gray8_image_t transformed(dims);
       (*best_transform)(raw_view, view(transformed));
 
       // Copmute the delta of the two images
-      boost::gil::gray8s_image_t delta(subs_view.dimensions());
+      boost::gil::gray8s_image_t delta(dims());
       delta_luminosity(const_view(transformed), subs_view, view(delta));
 
       // Show the delta in slot 3
