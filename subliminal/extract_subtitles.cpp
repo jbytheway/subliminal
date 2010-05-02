@@ -62,6 +62,16 @@ namespace {
       ffmsxx::video_frame this_frame_;
   };
 
+  struct get_extreme_values {
+    get_extreme_values(int thresh) : thresh_(thresh) {}
+
+    int operator()(gil::gray8s_pixel_t in) {
+      return ( abs(in) >= thresh_ ? 255 : 0 );
+    }
+
+    int thresh_;
+  };
+
 }
 
 void extract_subtitles(
@@ -119,7 +129,7 @@ void extract_subtitles(
     closest_frame_finder raw_finder{raw};
 
     for (int sub_frame_index = 0; sub_frame_index < subs.num_frames();
-        ++sub_frame_index) {
+        sub_frame_index += 10) {
       auto subs_frame = subs.frame(sub_frame_index);
       ffmsxx::video_frame const* raw_frame = NULL;
 
@@ -146,11 +156,19 @@ void extract_subtitles(
       (*best_transform)(raw_view, view(transformed));
 
       // Copmute the delta of the two images
-      boost::gil::gray8s_image_t delta(dims());
+      boost::gil::gray8s_image_t delta(dims);
       delta_luminosity(const_view(transformed), subs_view, view(delta));
 
       // Show the delta in slot 3
-      feedback.show(view(delta), 2);
+      feedback.show(const_view(delta), 2);
+
+      // Pull the extreme values from the delta
+      boost::gil::gray8_image_t extreme_values(dims);
+      transform_pixels(
+        const_view(delta), view(extreme_values), get_extreme_values(32)
+      );
+
+      feedback.show(const_view(extreme_values), 3);
 
       feedback.progress(sub_frame_index, subs.num_frames());
     }
