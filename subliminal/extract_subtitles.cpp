@@ -12,6 +12,7 @@
 #include <ffmsxx/make_gil_view.hpp>
 
 #include "fatal.hpp"
+#include "frame_transform.hpp"
 
 namespace subliminal {
 
@@ -136,7 +137,24 @@ void extract_subtitles(
     feedback.show(*raw_frame, 0);
     feedback.show(subs_frame, 1);
 
-    sleep(1);
+    // Get Boost.GIL views on the images
+    auto raw_view = make_gil_view(*raw_frame);
+    auto subs_view = make_gil_view(subs_frame);
+
+    for (double x_shift = -3; x_shift <= 3; x_shift += 0.5) {
+      frame_transform transform{x_shift};
+
+      // Transform the raw frame
+      boost::gil::rgb8_image_t transformed_raw(raw_view.dimensions());
+      transform(raw_view, view(transformed_raw));
+
+      // Copmute the delta of the two images
+      boost::gil::gray8s_image_t delta(subs_view.dimensions());
+      delta_luminosity(const_view(transformed_raw), subs_view, view(delta));
+
+      // Show the delta in slot 3
+      feedback.show(view(delta), 2);
+    }
   }
 
   {
