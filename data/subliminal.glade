@@ -5,16 +5,15 @@
   <widget class="GtkWindow" id="MainWindow">
     <property name="title" translatable="yes">Subliminal</property>
     <child>
-      <widget class="GtkHBox" id="hbox1">
+      <widget class="GtkTable" id="table1">
         <property name="visible">True</property>
+        <property name="n_rows">2</property>
+        <property name="n_columns">2</property>
         <child>
           <widget class="GtkImage" id="Image0">
             <property name="visible">True</property>
             <property name="stock">gtk-missing-image</property>
           </widget>
-          <packing>
-            <property name="position">0</property>
-          </packing>
         </child>
         <child>
           <widget class="GtkImage" id="Image1">
@@ -22,7 +21,8 @@
             <property name="stock">gtk-missing-image</property>
           </widget>
           <packing>
-            <property name="position">1</property>
+            <property name="left_attach">1</property>
+            <property name="right_attach">2</property>
           </packing>
         </child>
         <child>
@@ -31,7 +31,20 @@
             <property name="stock">gtk-missing-image</property>
           </widget>
           <packing>
-            <property name="position">2</property>
+            <property name="top_attach">1</property>
+            <property name="bottom_attach">2</property>
+          </packing>
+        </child>
+        <child>
+          <widget class="GtkImage" id="Image3">
+            <property name="visible">True</property>
+            <property name="stock">gtk-missing-image</property>
+          </widget>
+          <packing>
+            <property name="left_attach">1</property>
+            <property name="right_attach">2</property>
+            <property name="top_attach">1</property>
+            <property name="bottom_attach">2</property>
           </packing>
         </child>
       </widget>
