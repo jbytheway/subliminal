@@ -5,6 +5,9 @@
 #include <boost/gil/image_view.hpp>
 #include <boost/gil/image.hpp>
 #include <boost/gil/typedefs.hpp>
+#include <boost/spirit/home/phoenix/object/construct.hpp>
+#include <boost/spirit/home/phoenix/core/argument.hpp>
+#include <boost/format.hpp>
 
 #include <ffmsxx/video_source.hpp>
 #include <ffmsxx/video_dimensions.hpp>
@@ -36,6 +39,24 @@ namespace {
     }
   };
 
+  class square_value_accumulator {
+    public:
+      square_value_accumulator() : tally_(0), num_(0) {}
+
+      template<typename P>
+      void operator()(P const t) {
+        BOOST_MPL_ASSERT_RELATION(boost::gil::size<P>::value,==,1);
+        double v = t[0];
+        tally_ += v*v;
+        ++num_;
+      }
+
+      double value() { return tally_/num_; }
+    private:
+      double tally_;
+      size_t num_;
+  };
+
   void delta(
     gil::gray8c_view_t const& in1,
     gil::gray8c_view_t const& in2,
@@ -45,13 +66,20 @@ namespace {
     gil::transform_pixels(in1, in2, out, half_difference());
   }
 
+  template<typename OutView>
   void delta_luminosity(
     gil::rgb8c_view_t const& in1,
     gil::rgb8c_view_t const& in2,
-    gil::gray8s_view_t const& out
+    OutView const& out
   )
   {
     gil::transform_pixels(in1, in2, out, half_difference_luminosity());
+  }
+
+  template<typename View>
+  double rms_value(View const& view)
+  {
+    return gil::for_each_pixel(view, square_value_accumulator()).value();
   }
 
   class closest_frame_finder {
@@ -92,6 +120,94 @@ namespace {
       ffmsxx::video_frame last_frame_;
       ffmsxx::video_frame this_frame_;
   };
+
+  template<typename RefView>
+  class luminosity_match_scorer {
+    public:
+      luminosity_match_scorer(
+        RefView const& ref_view,
+        visual_feedback& feedback
+      ) :
+        ref_view_(ref_view),
+        feedback_(feedback)
+      {}
+
+      template<typename OtherView>
+      double operator()(OtherView const& other_view) const {
+        // Compute the delta of the two images
+        boost::gil::gray8s_image_t delta(ref_view_.dimensions());
+        feedback_.show(const_view(delta), 2);
+        delta_luminosity(other_view, ref_view_, view(delta));
+        return -rms_value(view(delta));
+      }
+    private:
+      RefView const& ref_view_;
+      visual_feedback& feedback_;
+  };
+
+  template<
+    typename TransformGen,
+    typename TransformeeView,
+    typename Scorer,
+    typename Domain
+  >
+  double score(
+    TransformGen const& transformGen,
+    TransformeeView const& transformee,
+    Scorer const& scorer,
+    Domain const val
+  )
+  {
+    auto transf = transformGen(val);
+    boost::gil::rgb8_image_t transformed(transformee.dimensions());
+    transf(transformee, view(transformed));
+    return scorer(const_view(transformed));
+  }
+
+  template<
+    typename TransformGen,
+    typename TransformeeView,
+    typename Scorer,
+    typename Domain
+  >
+  Domain optimize(
+    TransformGen const& transformGen,
+    TransformeeView const& transformee,
+    Scorer const& scorer,
+    visual_feedback& feedback,
+    Domain const min,
+    Domain const max,
+    Domain const init,
+    Domain const step
+  )
+  {
+    // First search upwards
+    Domain last = init;
+    auto last_score = score(transformGen, transformee, scorer, init);
+    feedback.messagef(boost::format("score(%f)=%f") % last % last_score);
+    while (true) {
+      Domain const next = last+step;
+      auto const next_score = score(transformGen, transformee, scorer, next);
+      feedback.messagef(boost::format("score(%f)=%f") % next % next_score);
+      if (next_score <= last_score) break;
+      last = next;
+      last_score = next_score;
+      if (last >= max) break;
+    }
+    // If we moved then we're done
+    if (last != init) return last;
+    // Otherwise search downwards too
+    while (true) {
+      Domain const next = last-step;
+      auto const next_score = score(transformGen, transformee, scorer, next);
+      feedback.messagef(boost::format("score(%f)=%f") % next % next_score);
+      if (next_score <= last_score) break;
+      last = next;
+      last_score = next_score;
+      if (last <= min) break;
+    }
+    return last;
+  }
 
 }
 
@@ -141,20 +257,20 @@ void extract_subtitles(
     auto raw_view = make_gil_view(*raw_frame);
     auto subs_view = make_gil_view(subs_frame);
 
-    for (double x_scale = 0.5; x_scale <= 1.5; x_scale *= 1.05) {
-      frame_transform transform(raw_view.dimensions(), -10, -10, x_scale, 1);
+    luminosity_match_scorer<decltype(subs_view)> scorer(subs_view, feedback);
 
-      // Transform the raw frame
-      boost::gil::rgb8_image_t transformed_raw(raw_view.dimensions());
-      transform(raw_view, view(transformed_raw));
-
-      // Compute the delta of the two images
-      boost::gil::gray8s_image_t delta(subs_view.dimensions());
-      delta_luminosity(const_view(transformed_raw), subs_view, view(delta));
-
-      // Show the delta in slot 3
-      feedback.show(view(delta), 2);
-    }
+    namespace px = boost::phoenix;
+    using namespace px::arg_names;
+    optimize(
+      px::construct<frame_transform>(raw_view.dimensions(), 0, 0, arg1, 1),
+      raw_view,
+      scorer,
+      feedback,
+      0.95,
+      1.05,
+      1.0,
+      0.002
+    );
   }
 
   {
