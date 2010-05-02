@@ -11,11 +11,16 @@ For building instructions see INSTALL.
 
 Subliminal contains:
 
+- boost
+  Slightly tweaked version of the Boost.GIL numeric extension.
+  (Note: you still need the rest of Boost; this extension is not distributed
+  with it).
+
 - ffmsxx
-  A thin C++ wrapper round ffmpegsource
+  A thin C++ wrapper round ffmpegsource.
 
 - subliminal
-  The program itself
+  The program itself.
 
 As yet there is no user documentation, but you can read subliminal's --help
 message and experiment with the test data.
