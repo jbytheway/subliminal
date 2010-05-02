@@ -141,14 +141,14 @@ void extract_subtitles(
     auto raw_view = make_gil_view(*raw_frame);
     auto subs_view = make_gil_view(subs_frame);
 
-    for (double x_shift = -3; x_shift <= 3; x_shift += 0.5) {
-      frame_transform transform{x_shift};
+    for (double x_scale = 0.5; x_scale <= 1.5; x_scale *= 1.05) {
+      frame_transform transform(raw_view.dimensions(), -10, -10, x_scale, 1);
 
       // Transform the raw frame
       boost::gil::rgb8_image_t transformed_raw(raw_view.dimensions());
       transform(raw_view, view(transformed_raw));
 
-      // Copmute the delta of the two images
+      // Compute the delta of the two images
       boost::gil::gray8s_image_t delta(subs_view.dimensions());
       delta_luminosity(const_view(transformed_raw), subs_view, view(delta));
 

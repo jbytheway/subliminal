@@ -8,11 +8,20 @@ namespace subliminal {
 
 class frame_transform {
   public:
-    frame_transform(double x_shift) :
-      x_shift_{x_shift},
+    frame_transform(
+      boost::gil::point2<ptrdiff_t> const& dims,
+      double x_shift, double y_shift,
+      double x_scale, double y_scale
+    ) :
       matrix_{
         boost::gil::matrix3x2<double>::get_translate(
-          boost::gil::point2<double>(x_shift_, 0)
+          boost::gil::point2<double>(-dims.x/2+x_shift, -dims.y/2+y_shift)
+        ) *
+        boost::gil::matrix3x2<double>::get_scale(
+          boost::gil::point2<double>(x_scale, y_scale)
+        ) *
+        boost::gil::matrix3x2<double>::get_translate(
+          boost::gil::point2<double>(dims.x/2, dims.y/2)
         )
       }
     {}
@@ -22,7 +31,6 @@ class frame_transform {
       resample_pixels(in, out, matrix_, boost::gil::bilinear_sampler());
     }
   private:
-    double x_shift_;
     boost::gil::matrix3x2<double> matrix_;
 };
 
