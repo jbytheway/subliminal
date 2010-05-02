@@ -219,8 +219,8 @@ void extract_subtitles(
 
     auto best_state = optimize(
       make_product_state_space(
-        linear_state_space<double>(-10, 10, 0, 0.25),
-        linear_state_space<double>(-10, 10, 0, 0.25),
+        linear_state_space<double>(-10, 10, 0, 1.0/4),
+        linear_state_space<double>(-10, 10, 0, 1.0/4),
         linear_state_space<double>(0.95, 1.05, 1.0, 0.002),
         linear_state_space<double>(0.95, 1.05, 1.0, 0.002)
       ),
