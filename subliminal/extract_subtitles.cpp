@@ -87,7 +87,7 @@ namespace {
   template<typename View>
   double rms_value(View const& view)
   {
-    return gil::for_each_pixel(view, square_value_accumulator()).value();
+    return sqrt(gil::for_each_pixel(view, square_value_accumulator()).value());
   }
 
   class closest_frame_finder {
