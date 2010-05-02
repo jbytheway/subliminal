@@ -16,6 +16,7 @@
 #include "frame_transform.hpp"
 #include "find_best_transform.hpp"
 #include "delta_luminosity.hpp"
+#include "flood_fill.hpp"
 
 namespace subliminal {
 
@@ -168,7 +169,12 @@ void extract_subtitles(
         const_view(delta), view(extreme_values), get_extreme_values(32)
       );
 
-      feedback.show(const_view(extreme_values), 3);
+      // Flood fill the outside
+      boost::gil::gray8_image_t outside_fill(dims);
+      fill_pixels(view(outside_fill), 0);
+      flood_fill(const_view(extreme_values), view(outside_fill));
+
+      feedback.show(const_view(outside_fill), 3);
 
       feedback.progress(sub_frame_index, subs.num_frames());
     }
