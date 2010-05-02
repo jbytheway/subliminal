@@ -15,6 +15,7 @@ namespace subliminal {
 class visual_feedback : boost::noncopyable {
   public:
     virtual ~visual_feedback() = 0;
+    virtual void message(std::string const&) = 0;
     virtual void show_rgb(boost::gil::rgb8c_view_t const&, int image) = 0;
     virtual void progress(int pos, int outof) = 0;
 

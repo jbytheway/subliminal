@@ -66,7 +66,7 @@ namespace {
 
       bool get_closest_frame(
         boost::rational<int64_t> const& time,
-        ffmsxx::video_frame*& best_frame
+        ffmsxx::video_frame const*& best_frame
       )
       {
         while (this_frame_.time(time_base_) < time) {
@@ -114,39 +114,65 @@ void extract_subtitles(
   subs.set_output_format(formats, subs_dims, ffmsxx::resizer::bicubic);
 
   auto subs_time_base = subs.time_base();
-  closest_frame_finder raw_finder{raw};
 
-  for (int sub_frame_index = 0; sub_frame_index < subs.num_frames();
-      ++sub_frame_index) {
+  {
+    // Step 1: Determine the appropriate affine transformation to make the raw
+    // frames line up with the subbed ones
+    feedback.message("searching for good transform");
+
+    closest_frame_finder raw_finder{raw};
+
+    // Jump to a frame ~5 seconds in (blah blah framerate blah blah)
+    int const sub_frame_index = std::min(25*5, subs.num_frames()/2);
     auto subs_frame = subs.frame(sub_frame_index);
-    ffmsxx::video_frame* best_raw_frame = NULL;
+    ffmsxx::video_frame const* raw_frame = NULL;
 
     if (!raw_finder.get_closest_frame(
-        subs_frame.time(subs_time_base), best_raw_frame
+        subs_frame.time(subs_time_base), raw_frame
       )) {
-      return;
+      SUBLIMINAL_FATAL("videos seem to be of wildly different lengths");
     }
 
-    assert(best_raw_frame);
-
-    feedback.show(*best_raw_frame, 0);
+    feedback.show(*raw_frame, 0);
     feedback.show(subs_frame, 1);
 
-    // Get Boost.GIL views on the images
-    auto raw_view = make_gil_view(*best_raw_frame);
-    auto subs_view = make_gil_view(subs_frame);
-
-    // Copmute the delta of the two images
-    boost::gil::gray8s_image_t delta(subs_view.dimensions());
-    delta_luminosity(raw_view, subs_view, view(delta));
-
-    // Show the delta in slot 3
-    feedback.show(view(delta), 2);
-
-    feedback.progress(sub_frame_index, subs.num_frames());
+    sleep(1);
   }
 
-  sleep(1);
+  {
+    // Step 2: Walk through the video, and do stuff
+    closest_frame_finder raw_finder{raw};
+
+    for (int sub_frame_index = 0; sub_frame_index < subs.num_frames();
+        ++sub_frame_index) {
+      auto subs_frame = subs.frame(sub_frame_index);
+      ffmsxx::video_frame const* raw_frame = NULL;
+
+      if (!raw_finder.get_closest_frame(
+          subs_frame.time(subs_time_base), raw_frame
+        )) {
+        return;
+      }
+
+      assert(raw_frame);
+
+      feedback.show(*raw_frame, 0);
+      feedback.show(subs_frame, 1);
+
+      // Get Boost.GIL views on the images
+      auto raw_view = make_gil_view(*raw_frame);
+      auto subs_view = make_gil_view(subs_frame);
+
+      // Copmute the delta of the two images
+      boost::gil::gray8s_image_t delta(subs_view.dimensions());
+      delta_luminosity(raw_view, subs_view, view(delta));
+
+      // Show the delta in slot 3
+      feedback.show(view(delta), 2);
+
+      feedback.progress(sub_frame_index, subs.num_frames());
+    }
+  }
 }
 
 }
