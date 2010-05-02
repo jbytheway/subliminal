@@ -183,9 +183,10 @@ void extract_subtitles(
 
   auto subs_time_base = subs.time_base();
 
+  std::unique_ptr<frame_transform> best_transform;
   {
     // Step 1: Determine the appropriate affine transformation to make the raw
-    // frames line up with the subbed ones
+    // frames line up with the subbed ones; will be stored in best_transform
     feedback.message("searching for good transform");
 
     closest_frame_finder raw_finder{raw};
@@ -216,7 +217,7 @@ void extract_subtitles(
     luminosity_match_scorer<decltype(transform_maker), decltype(subs_view)>
       scorer(transform_maker, raw_view, subs_view, feedback);
 
-    optimize(
+    auto best_state = optimize(
       make_product_state_space(
         linear_state_space<double>(-10, 10, 0, 0.25),
         linear_state_space<double>(-10, 10, 0, 0.25),
@@ -226,7 +227,13 @@ void extract_subtitles(
       scorer,
       feedback
     );
+
+    best_transform.reset(
+      new frame_transform(raw_view.dimensions(), best_state)
+    );
   }
+
+  assert(best_transform);
 
   {
     // Step 2: Walk through the video, and do stuff
@@ -252,9 +259,13 @@ void extract_subtitles(
       auto raw_view = make_gil_view(*raw_frame);
       auto subs_view = make_gil_view(subs_frame);
 
+      // Apply chosen best transform to raw
+      boost::gil::rgb8_image_t transformed(raw_view.dimensions());
+      (*best_transform)(raw_view, view(transformed));
+
       // Copmute the delta of the two images
       boost::gil::gray8s_image_t delta(subs_view.dimensions());
-      delta_luminosity(raw_view, subs_view, view(delta));
+      delta_luminosity(const_view(transformed), subs_view, view(delta));
 
       // Show the delta in slot 3
       feedback.show(view(delta), 2);
