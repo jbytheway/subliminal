@@ -14,6 +14,7 @@
 #include "text_feedback.hpp"
 #include "gtk_feedback.hpp"
 #include "fatal.hpp"
+#include "transform_params.hpp"
 
 namespace {
 
@@ -32,6 +33,7 @@ namespace {
     std::string raw;
     std::string subs;
     boost::filesystem::path output;
+    subliminal::transform_params start_params;
   };
 
   void usage()
@@ -51,6 +53,11 @@ namespace {
 "  -q, --quiet      Suppress various messages.\n"
 "  -r, --raw V1     V1 is the video without subs.\n"
 "  -s, --subs V2    V2 is the video with subs.\n"
+"  -t, --transform (XP XT YP YT LP LT)\n"
+"                   Start alignment search at specified transform, where\n"
+"                   each capital variable is a floating point value,\n"
+"                   X and Y are for spatial coordinates, L is luminosity,\n"
+"                   P is a quantity added, and T a scale factor.\n"
 << std::endl;
   }
 
@@ -58,14 +65,15 @@ namespace {
   {
     optimal::OptionsParser parser;
     Options results;
-    parser.addOption("align",  'a', &results.alignment_frame);
-    parser.addOption("data",   'd', &results.data);
-    parser.addOption("gtk",    'g', &results.gtk);
-    parser.addOption("help",   'h', &results.help);
-    parser.addOption("output", 'o', &results.output);
-    parser.addOption("quiet",  'q', &results.quiet);
-    parser.addOption("raw",    'r', &results.raw);
-    parser.addOption("subs",   's', &results.subs);
+    parser.addOption("align",     'a', &results.alignment_frame);
+    parser.addOption("data",      'd', &results.data);
+    parser.addOption("gtk",       'g', &results.gtk);
+    parser.addOption("help",      'h', &results.help);
+    parser.addOption("output",    'o', &results.output);
+    parser.addOption("quiet",     'q', &results.quiet);
+    parser.addOption("raw",       'r', &results.raw);
+    parser.addOption("subs",      's', &results.subs);
+    parser.addOption("transform", 't', &results.start_params);
 
     if (parser.parse(argc, argv)) {
       std::cerr <<
@@ -141,7 +149,7 @@ int main(int argc, char** argv)
     }
 
     subliminal::extract_subtitles_options extract_options{
-      options.alignment_frame
+      options.alignment_frame, options.start_params
     };
     subliminal::extract_subtitles(
       raw_source, sub_source, extract_options, *feedback

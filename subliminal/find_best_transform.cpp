@@ -79,6 +79,7 @@ namespace {
 frame_transform find_best_transform(
   ffmsxx::video_frame const& from,
   ffmsxx::video_frame const& to,
+  transform_params const& start_params,
   visual_feedback& feedback
 )
 {
@@ -100,14 +101,14 @@ frame_transform find_best_transform(
   auto best_state = optimize(
     make_product_state_space(
       // x shift and scale
-      linear_state_space<double>(-10, 10, 0, 1.0/4),
-      linear_state_space<double>(0.95, 1.05, 1.0, 0.002),
+      linear_state_space<double>(-10, 10, start_params.x_shift, 1.0/4),
+      linear_state_space<double>(0.95, 1.05, start_params.x_scale, 0.002),
       // y shift and scale
-      linear_state_space<double>(-10, 10, 0, 1.0/4),
-      linear_state_space<double>(0.95, 1.05, 1.0, 0.002),
+      linear_state_space<double>(-10, 10, start_params.y_shift, 1.0/4),
+      linear_state_space<double>(0.95, 1.05, start_params.y_scale, 0.002),
       // l shift and scale
-      linear_state_space<double>(-10, 10, 0, 1.0),
-      linear_state_space<double>(0.9, 1.1, 1.0, 0.01)
+      linear_state_space<double>(-10, 10, start_params.l_shift, 1.0),
+      linear_state_space<double>(0.9, 1.1, start_params.l_scale, 0.01)
     ),
     scorer,
     feedback

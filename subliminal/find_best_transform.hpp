@@ -11,6 +11,7 @@ namespace subliminal {
 frame_transform find_best_transform(
   ffmsxx::video_frame const& from,
   ffmsxx::video_frame const& to,
+  transform_params const& start_params,
   visual_feedback& feedback
 );
 

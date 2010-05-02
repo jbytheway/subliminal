@@ -118,9 +118,9 @@ void extract_subtitles(
       SUBLIMINAL_FATAL("videos seem to be of wildly different lengths");
     }
 
-    best_transform.reset(new frame_transform(
-        find_best_transform(*raw_frame, subs_frame, feedback)
-    ));
+    best_transform.reset(new frame_transform(find_best_transform(
+          *raw_frame, subs_frame, options.start_params, feedback
+        )));
   }
 
   assert(best_transform);
