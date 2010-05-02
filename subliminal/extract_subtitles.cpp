@@ -5,8 +5,6 @@
 #include <boost/gil/image_view.hpp>
 #include <boost/gil/image.hpp>
 #include <boost/gil/typedefs.hpp>
-#include <boost/spirit/home/phoenix/object/construct.hpp>
-#include <boost/spirit/home/phoenix/core/argument.hpp>
 #include <boost/format.hpp>
 
 #include <ffmsxx/video_source.hpp>
@@ -16,79 +14,14 @@
 
 #include "fatal.hpp"
 #include "frame_transform.hpp"
-#include "linear_state_space.hpp"
-#include "product_state_space.hpp"
-#include "optimize.hpp"
+#include "find_best_transform.hpp"
+#include "delta_luminosity.hpp"
 
 namespace subliminal {
 
 namespace gil = boost::gil;
 
 namespace {
-
-  struct half_difference {
-    int operator()(gil::gray8_pixel_t in1, gil::gray8_pixel_t in2) const {
-      return (in1 - in2) / 2;
-    }
-  };
-
-  struct half_difference_luminosity {
-    template<typename Pixel1, typename Pixel2>
-    int operator()(Pixel1 in1, Pixel2 in2) const {
-      boost::gil::color_convert_deref_fn<
-        const Pixel1&,
-        gil::gray8_pixel_t
-      > cc1;
-      boost::gil::color_convert_deref_fn<
-        const Pixel2&,
-        gil::gray8_pixel_t
-      > cc2;
-      return (cc1(in1) - cc2(in2)) / 2;
-    }
-  };
-
-  class square_value_accumulator {
-    public:
-      square_value_accumulator() : tally_(0), num_(0) {}
-
-      template<typename P>
-      void operator()(P const t) {
-        BOOST_MPL_ASSERT_RELATION(boost::gil::size<P>::value,==,1);
-        double v = t[0];
-        tally_ += v*v;
-        ++num_;
-      }
-
-      double value() { return tally_/num_; }
-    private:
-      double tally_;
-      size_t num_;
-  };
-
-  void delta(
-    gil::gray8c_view_t const& in1,
-    gil::gray8c_view_t const& in2,
-    gil::gray8s_view_t const& out
-  )
-  {
-    gil::transform_pixels(in1, in2, out, half_difference());
-  }
-
-  template<typename InView1, typename InView2, typename OutView>
-  void delta_luminosity(
-    InView1 const& in1,
-    InView2 const& in2,
-    OutView const& out
-  )
-  {
-    gil::transform_pixels(in1, in2, out, half_difference_luminosity());
-  }
-
-  template<typename View>
-  double rms_value(View const& view)
-  {
-    return sqrt(gil::for_each_pixel(view, square_value_accumulator()).value());
-  }
 
   class closest_frame_finder {
     public:
@@ -127,42 +60,6 @@ namespace {
       int frame_index_;
       ffmsxx::video_frame last_frame_;
       ffmsxx::video_frame this_frame_;
-  };
-
-  template<typename TransformGen, typename View>
-  class luminosity_match_scorer {
-    public:
-      luminosity_match_scorer(
-        TransformGen transform_gen,
-        View const& transformee_view,
-        View const& ref_view,
-        visual_feedback& feedback
-      ) :
-        transform_gen_(std::move(transform_gen)),
-        transformee_view_(transformee_view),
-        ref_view_(ref_view),
-        feedback_(feedback)
-      {}
-
-      template<typename State>
-      double operator()(State const& state) const {
-        // Make the transformation function for this state
-        auto transf = transform_gen_(state);
-        // Transform one image
-        boost::gil::gray8_image_t transformed(transformee_view_.dimensions());
-        transf(transformee_view_, view(transformed));
-        // Compute the delta of the transformed and other image
-        boost::gil::gray8s_image_t delta(ref_view_.dimensions());
-        delta_luminosity(const_view(transformed), ref_view_, view(delta));
-        feedback_.show(const_view(delta), 2);
-        // Score by the rms delta luminosity
-        return -rms_value(view(delta));
-      }
-    private:
-      TransformGen transform_gen_;
-      View const& transformee_view_;
-      View const& ref_view_;
-      visual_feedback& feedback_;
   };
 
 }
@@ -210,40 +107,9 @@ void extract_subtitles(
       SUBLIMINAL_FATAL("videos seem to be of wildly different lengths");
     }
 
-    feedback.show(*raw_frame, 0);
-    feedback.show(subs_frame, 1);
-
-    // Get Boost.GIL views on the images
-    auto raw_view = make_gil_view(*raw_frame);
-    auto subs_view = make_gil_view(subs_frame);
-
-    namespace px = boost::phoenix;
-    using namespace px::arg_names;
-    auto transform_maker =
-      px::construct<frame_transform>(raw_view.dimensions(), arg1);
-
-    luminosity_match_scorer<decltype(transform_maker), decltype(subs_view)>
-      scorer(transform_maker, raw_view, subs_view, feedback);
-
-    auto best_state = optimize(
-      make_product_state_space(
-        // x shift and scale
-        linear_state_space<double>(-10, 10, 0, 1.0/4),
-        linear_state_space<double>(0.95, 1.05, 1.0, 0.002),
-        // y shift and scale
-        linear_state_space<double>(-10, 10, 0, 1.0/4),
-        linear_state_space<double>(0.95, 1.05, 1.0, 0.002),
-        // l shift and scale
-        linear_state_space<double>(-10, 10, 0, 1.0),
-        linear_state_space<double>(0.9, 1.1, 1.0, 0.01)
-      ),
-      scorer,
-      feedback
-    );
-
-    best_transform.reset(
-      new frame_transform(raw_view.dimensions(), best_state)
-    );
+    best_transform.reset(new frame_transform(
+        find_best_transform(*raw_frame, subs_frame, feedback)
+    ));
   }
 
   assert(best_transform);

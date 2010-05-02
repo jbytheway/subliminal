@@ -1,6 +1,8 @@
 #ifndef SUBLIMINAL__VARIADIC_VECTOR_HPP
 #define SUBLIMINAL__VARIADIC_VECTOR_HPP
 
+#include <boost/fusion/include/as_vector.hpp>
+
 namespace subliminal {
 
 /** \bug Once g++ implements variadic templates fully this header will be

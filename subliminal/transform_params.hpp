@@ -3,6 +3,7 @@
 
 #include <boost/fusion/include/is_sequence.hpp>
 #include <boost/fusion/include/at.hpp>
+#include <boost/fusion/include/size.hpp>
 
 namespace subliminal {
 
