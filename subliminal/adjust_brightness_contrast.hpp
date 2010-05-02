@@ -1,6 +1,8 @@
 #ifndef SUBLIMINAL__ADJUST_BRIGHTNESS_CONTRAST_HPP
 #define SUBLIMINAL__ADJUST_BRIGHTNESS_CONTRAST_HPP
 
+#include "clamp.hpp"
+
 namespace subliminal {
 
 class adjust_brightness_contrast {
@@ -12,7 +14,8 @@ class adjust_brightness_contrast {
     template<typename P>
     void operator()(P& t) {
       BOOST_MPL_ASSERT_RELATION(boost::gil::size<P>::value,==,1);
-      t[0] = t[0]*l_scale_+l_shift_;
+      typedef typename std::remove_reference<decltype(t[0])>::type Value;
+      t[0] = clamp<Value>(t[0]*l_scale_+l_shift_);
     }
   private:
     double l_shift_;
