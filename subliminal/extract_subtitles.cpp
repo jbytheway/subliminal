@@ -53,6 +53,45 @@ namespace {
     gil::transform_pixels(in1, in2, out, half_difference_luminosity());
   }
 
+  class closest_frame_finder {
+    public:
+      closest_frame_finder(ffmsxx::video_source const& source) :
+        source_(source),
+        time_base_(source_.time_base()),
+        frame_index_{0},
+        last_frame_{source.frame(frame_index_)},
+        this_frame_{source.frame(++frame_index_)}
+      {
+      }
+
+      bool get_closest_frame(
+        boost::rational<int64_t> const& time,
+        ffmsxx::video_frame*& best_frame
+      )
+      {
+        while (this_frame_.time(time_base_) < time) {
+          last_frame_ = std::move(this_frame_);
+          ++frame_index_;
+          if (frame_index_ >= source_.num_frames()) {
+            return false;
+          }
+          this_frame_ = source_.frame(frame_index_);
+        }
+
+        auto diff_to_last = abs(time-last_frame_.time(time_base_));
+        auto diff_to_this = abs(time-this_frame_.time(time_base_));
+        best_frame =
+          &( diff_to_last < diff_to_this ? last_frame_ : this_frame_ );
+        return true;
+      }
+    private:
+      ffmsxx::video_source const& source_;
+      boost::rational<int64_t> time_base_;
+      int frame_index_;
+      ffmsxx::video_frame last_frame_;
+      ffmsxx::video_frame this_frame_;
+  };
+
 }
 
 void extract_subtitles(
@@ -74,40 +113,27 @@ void extract_subtitles(
   raw.set_output_format(formats, subs_dims, ffmsxx::resizer::bicubic);
   subs.set_output_format(formats, subs_dims, ffmsxx::resizer::bicubic);
 
-  auto raw_time_base = raw.time_base();
   auto subs_time_base = subs.time_base();
-
-  int raw_frame_index = 0;
-  auto last_raw_frame = raw.frame(raw_frame_index);
-  auto this_raw_frame = raw.frame(++raw_frame_index);
+  closest_frame_finder raw_finder{raw};
 
   for (int sub_frame_index = 0; sub_frame_index < subs.num_frames();
       ++sub_frame_index) {
     auto subs_frame = subs.frame(sub_frame_index);
-    bool done = false;
-    while (this_raw_frame.time(raw_time_base) <
-      subs_frame.time(subs_time_base)) {
-      last_raw_frame = std::move(this_raw_frame);
-      ++raw_frame_index;
-      if (raw_frame_index >= raw.num_frames()) {
-        done = true;
-        break;
-      }
-      this_raw_frame = raw.frame(raw_frame_index);
-    }
-    if (done) break;
+    ffmsxx::video_frame* best_raw_frame = NULL;
 
-    auto diff_to_last =
-      abs(subs_frame.time(subs_time_base)-last_raw_frame.time(raw_time_base));
-    auto diff_to_this =
-      abs(subs_frame.time(subs_time_base)-this_raw_frame.time(raw_time_base));
-    ffmsxx::video_frame& best_raw_frame =
-      ( diff_to_last < diff_to_this ? last_raw_frame : this_raw_frame );
-    feedback.show(best_raw_frame, 0);
+    if (!raw_finder.get_closest_frame(
+        subs_frame.time(subs_time_base), best_raw_frame
+      )) {
+      return;
+    }
+
+    assert(best_raw_frame);
+
+    feedback.show(*best_raw_frame, 0);
     feedback.show(subs_frame, 1);
 
     // Get Boost.GIL views on the images
-    auto raw_view = make_gil_view(best_raw_frame);
+    auto raw_view = make_gil_view(*best_raw_frame);
     auto subs_view = make_gil_view(subs_frame);
 
     // Copmute the delta of the two images
