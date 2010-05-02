@@ -170,6 +170,7 @@ namespace {
 void extract_subtitles(
   ffmsxx::video_source& raw,
   ffmsxx::video_source& subs,
+  extract_subtitles_options const& options,
   visual_feedback& feedback
 )
 {
@@ -197,7 +198,9 @@ void extract_subtitles(
     closest_frame_finder raw_finder{raw};
 
     // Jump to a frame ~5 seconds in (blah blah framerate blah blah)
-    int const sub_frame_index = std::min(25*5, subs.num_frames()/2);
+    int const sub_frame_index =
+      ( options.alignment_frame ?
+        *options.alignment_frame :std::min(25*5, subs.num_frames()/2) );
     auto subs_frame = subs.frame(sub_frame_index);
     ffmsxx::video_frame const* raw_frame = NULL;
 

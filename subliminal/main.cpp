@@ -24,6 +24,7 @@ namespace {
       quiet{}
     {}
 
+    boost::optional<int> alignment_frame;
     boost::filesystem::path data;
     bool gtk;
     bool help;
@@ -40,6 +41,7 @@ namespace {
 "\n"
 "  subliminal [OPTIONS] --raw V1 --subs V2\n"
 "\n"
+"  -a, --align N    Use frame N for determining alignment.\n"
 "  -d, --data DATA  Look for program data in DATA.  Default is to search for\n"
 "                   a directory named 'data' in the executable's directory\n"
 "                   or any parent thereof.\n"
@@ -56,6 +58,7 @@ namespace {
   {
     optimal::OptionsParser parser;
     Options results;
+    parser.addOption("align",  'a', &results.alignment_frame);
     parser.addOption("data",   'd', &results.data);
     parser.addOption("gtk",    'g', &results.gtk);
     parser.addOption("help",   'h', &results.help);
@@ -137,7 +140,12 @@ int main(int argc, char** argv)
       feedback.reset(new subliminal::text_feedback(std::cout));
     }
 
-    subliminal::extract_subtitles(raw_source, sub_source, *feedback);
+    subliminal::extract_subtitles_options extract_options{
+      options.alignment_frame
+    };
+    subliminal::extract_subtitles(
+      raw_source, sub_source, extract_options, *feedback
+    );
   } catch (ffmsxx::error const& e) {
     std::cerr << "Video error: " << e.what() << std::endl;
     return 1;

@@ -7,9 +7,14 @@
 
 namespace subliminal {
 
+struct extract_subtitles_options {
+  boost::optional<int> alignment_frame;
+};
+
 void extract_subtitles(
   ffmsxx::video_source& raw,
   ffmsxx::video_source& subs,
+  extract_subtitles_options const&,
   visual_feedback&
 );
 
