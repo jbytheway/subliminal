@@ -33,12 +33,17 @@ namespace {
   };
 
   struct half_difference_luminosity {
-    int operator()(gil::rgb8_pixel_t in1, gil::rgb8_pixel_t in2) const {
+    template<typename Pixel1, typename Pixel2>
+    int operator()(Pixel1 in1, Pixel2 in2) const {
       boost::gil::color_convert_deref_fn<
-        const boost::gil::rgb8c_pixel_t&,
+        const Pixel1&,
         gil::gray8_pixel_t
-      > cc;
-      return (cc(in1) - cc(in2)) / 2;
+      > cc1;
+      boost::gil::color_convert_deref_fn<
+        const Pixel2&,
+        gil::gray8_pixel_t
+      > cc2;
+      return (cc1(in1) - cc2(in2)) / 2;
     }
   };
 
@@ -69,10 +74,10 @@ namespace {
     gil::transform_pixels(in1, in2, out, half_difference());
   }
 
-  template<typename OutView>
+  template<typename InView1, typename InView2, typename OutView>
   void delta_luminosity(
-    gil::rgb8c_view_t const& in1,
-    gil::rgb8c_view_t const& in2,
+    InView1 const& in1,
+    InView2 const& in2,
     OutView const& out
   )
   {
@@ -144,7 +149,7 @@ namespace {
         // Make the transformation function for this state
         auto transf = transform_gen_(state);
         // Transform one image
-        boost::gil::rgb8_image_t transformed(transformee_view_.dimensions());
+        boost::gil::gray8_image_t transformed(transformee_view_.dimensions());
         transf(transformee_view_, view(transformed));
         // Compute the delta of the transformed and other image
         boost::gil::gray8s_image_t delta(ref_view_.dimensions());
@@ -219,10 +224,15 @@ void extract_subtitles(
 
     auto best_state = optimize(
       make_product_state_space(
-        linear_state_space<double>(-10, 10, 0, 1.0/4),
+        // x shift and scale
         linear_state_space<double>(-10, 10, 0, 1.0/4),
         linear_state_space<double>(0.95, 1.05, 1.0, 0.002),
-        linear_state_space<double>(0.95, 1.05, 1.0, 0.002)
+        // y shift and scale
+        linear_state_space<double>(-10, 10, 0, 1.0/4),
+        linear_state_space<double>(0.95, 1.05, 1.0, 0.002),
+        // l shift and scale
+        linear_state_space<double>(-10, 10, 0, 1.0),
+        linear_state_space<double>(0.9, 1.1, 1.0, 0.01)
       ),
       scorer,
       feedback
@@ -260,7 +270,7 @@ void extract_subtitles(
       auto subs_view = make_gil_view(subs_frame);
 
       // Apply chosen best transform to raw
-      boost::gil::rgb8_image_t transformed(raw_view.dimensions());
+      boost::gil::gray8_image_t transformed(raw_view.dimensions());
       (*best_transform)(raw_view, view(transformed));
 
       // Copmute the delta of the two images

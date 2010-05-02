@@ -13,18 +13,25 @@ struct transform_params {
         typename boost::fusion::traits::is_sequence<Sequence>::type
       ));
     BOOST_MPL_ASSERT_RELATION(
-      boost::fusion::result_of::size<Sequence>::type::value,==,4
+      boost::fusion::result_of::size<Sequence>::type::value,==,6
     );
     x_shift = boost::fusion::at<boost::mpl::int_<0>>(s);
-    y_shift = boost::fusion::at<boost::mpl::int_<1>>(s);
-    x_scale = boost::fusion::at<boost::mpl::int_<2>>(s);
+    x_scale = boost::fusion::at<boost::mpl::int_<1>>(s);
+    y_shift = boost::fusion::at<boost::mpl::int_<2>>(s);
     y_scale = boost::fusion::at<boost::mpl::int_<3>>(s);
+    l_shift = boost::fusion::at<boost::mpl::int_<4>>(s);
+    l_scale = boost::fusion::at<boost::mpl::int_<5>>(s);
+
+    assert(x_scale);
+    assert(y_scale);
   }
 
   double x_shift;
-  double y_shift;
   double x_scale;
+  double y_shift;
   double y_scale;
+  double l_shift;
+  double l_scale;
 };
 
 }
