@@ -16,6 +16,9 @@
 
 #include "fatal.hpp"
 #include "frame_transform.hpp"
+#include "linear_state_space.hpp"
+#include "product_state_space.hpp"
+#include "optimize.hpp"
 
 namespace subliminal {
 
@@ -121,93 +124,41 @@ namespace {
       ffmsxx::video_frame this_frame_;
   };
 
-  template<typename RefView>
+  template<typename TransformGen, typename View>
   class luminosity_match_scorer {
     public:
       luminosity_match_scorer(
-        RefView const& ref_view,
+        TransformGen transform_gen,
+        View const& transformee_view,
+        View const& ref_view,
         visual_feedback& feedback
       ) :
+        transform_gen_(std::move(transform_gen)),
+        transformee_view_(transformee_view),
         ref_view_(ref_view),
         feedback_(feedback)
       {}
 
-      template<typename OtherView>
-      double operator()(OtherView const& other_view) const {
-        // Compute the delta of the two images
+      template<typename State>
+      double operator()(State const& state) const {
+        // Make the transformation function for this state
+        auto transf = transform_gen_(state);
+        // Transform one image
+        boost::gil::rgb8_image_t transformed(transformee_view_.dimensions());
+        transf(transformee_view_, view(transformed));
+        // Compute the delta of the transformed and other image
         boost::gil::gray8s_image_t delta(ref_view_.dimensions());
+        delta_luminosity(const_view(transformed), ref_view_, view(delta));
         feedback_.show(const_view(delta), 2);
-        delta_luminosity(other_view, ref_view_, view(delta));
+        // Score by the rms delta luminosity
         return -rms_value(view(delta));
       }
     private:
-      RefView const& ref_view_;
+      TransformGen transform_gen_;
+      View const& transformee_view_;
+      View const& ref_view_;
       visual_feedback& feedback_;
   };
-
-  template<
-    typename TransformGen,
-    typename TransformeeView,
-    typename Scorer,
-    typename Domain
-  >
-  double score(
-    TransformGen const& transformGen,
-    TransformeeView const& transformee,
-    Scorer const& scorer,
-    Domain const val
-  )
-  {
-    auto transf = transformGen(val);
-    boost::gil::rgb8_image_t transformed(transformee.dimensions());
-    transf(transformee, view(transformed));
-    return scorer(const_view(transformed));
-  }
-
-  template<
-    typename TransformGen,
-    typename TransformeeView,
-    typename Scorer,
-    typename Domain
-  >
-  Domain optimize(
-    TransformGen const& transformGen,
-    TransformeeView const& transformee,
-    Scorer const& scorer,
-    visual_feedback& feedback,
-    Domain const min,
-    Domain const max,
-    Domain const init,
-    Domain const step
-  )
-  {
-    // First search upwards
-    Domain last = init;
-    auto last_score = score(transformGen, transformee, scorer, init);
-    feedback.messagef(boost::format("score(%f)=%f") % last % last_score);
-    while (true) {
-      Domain const next = last+step;
-      auto const next_score = score(transformGen, transformee, scorer, next);
-      feedback.messagef(boost::format("score(%f)=%f") % next % next_score);
-      if (next_score <= last_score) break;
-      last = next;
-      last_score = next_score;
-      if (last >= max) break;
-    }
-    // If we moved then we're done
-    if (last != init) return last;
-    // Otherwise search downwards too
-    while (true) {
-      Domain const next = last-step;
-      auto const next_score = score(transformGen, transformee, scorer, next);
-      feedback.messagef(boost::format("score(%f)=%f") % next % next_score);
-      if (next_score <= last_score) break;
-      last = next;
-      last_score = next_score;
-      if (last <= min) break;
-    }
-    return last;
-  }
 
 }
 
@@ -257,19 +208,23 @@ void extract_subtitles(
     auto raw_view = make_gil_view(*raw_frame);
     auto subs_view = make_gil_view(subs_frame);
 
-    luminosity_match_scorer<decltype(subs_view)> scorer(subs_view, feedback);
-
     namespace px = boost::phoenix;
     using namespace px::arg_names;
+    auto transform_maker =
+      px::construct<frame_transform>(raw_view.dimensions(), arg1);
+
+    luminosity_match_scorer<decltype(transform_maker), decltype(subs_view)>
+      scorer(transform_maker, raw_view, subs_view, feedback);
+
     optimize(
-      px::construct<frame_transform>(raw_view.dimensions(), 0, 0, arg1, 1),
-      raw_view,
+      make_product_state_space(
+        linear_state_space<double>(-10, 10, 0, 0.25),
+        linear_state_space<double>(-10, 10, 0, 0.25),
+        linear_state_space<double>(0.95, 1.05, 1.0, 0.002),
+        linear_state_space<double>(0.95, 1.05, 1.0, 0.002)
+      ),
       scorer,
-      feedback,
-      0.95,
-      1.05,
-      1.0,
-      0.002
+      feedback
     );
   }
 
