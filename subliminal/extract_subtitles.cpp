@@ -83,6 +83,19 @@ namespace {
     }
   };
 
+  struct delete_if_isolated {
+    void operator()(const gil::gray8_loc_t& loc) const {
+      typedef gil::gray8_loc_t::point_t Point;
+      int count_neighbours = 0;
+      auto up = loc - Point(0, 1);
+      count_neighbours += !!up[-1] + !!up[0] + !!up[1];
+      count_neighbours += !!loc[-1] + !!loc[1];
+      auto down = loc + Point(0, 1);
+      count_neighbours += !!down[-1] + !!down[0] + !!down[1];
+      if (count_neighbours <= 1) *loc = 0;
+    }
+  };
+
 }
 
 void extract_subtitles(
@@ -186,6 +199,12 @@ void extract_subtitles(
 
       // Invert
       for_each_pixel(view(outside_fill), invert());
+
+      // Delete isolated pixels
+      for_each_pixel_position(
+        subimage_view(view(outside_fill), 1, 1, dims.x-2, dims.y-2),
+        delete_if_isolated()
+      );
 
       feedback.show(const_view(outside_fill), 3);
 
