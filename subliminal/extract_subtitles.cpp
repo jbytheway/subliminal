@@ -96,6 +96,27 @@ namespace {
     }
   };
 
+  struct copy_if {
+    template<typename InP>
+    InP operator()(InP const& in, gil::gray8_pixel_t const& mask) {
+      if (mask) {
+        return in;
+      } else {
+        return InP(0, 0, 0);
+      }
+    }
+  };
+
+  template<typename In, typename Out>
+  void copy_under_mask(
+    In const& in,
+    gil::gray8c_view_t const& mask,
+    Out const& out
+  )
+  {
+    transform_pixels(in, mask, out, copy_if());
+  }
+
 }
 
 void extract_subtitles(
@@ -215,6 +236,12 @@ void extract_subtitles(
 
       BOOST_FOREACH(auto const& chunk, chunks) {
         feedback.show(const_view(chunk), 4);
+
+        // Extract this chunk from the subbed copy
+        boost::gil::rgb8_image_t sub_chunk(dims);
+        copy_under_mask(subs_view, const_view(chunk), view(sub_chunk));
+
+        feedback.show(const_view(sub_chunk), 5);
       }
 
       feedback.progress(sub_frame_index, subs.num_frames());
