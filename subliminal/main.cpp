@@ -43,7 +43,7 @@ namespace {
     std::cout <<
 "Subliminal is a free subtitle extraction system\n"
 "\n"
-"  subliminal [OPTIONS] --raw V1 --subs V2\n"
+"  subliminal [OPTIONS] --output O --raw V1 --subs V2\n"
 "\n"
 "  -a, --align N    Use frame N for determining alignment.\n"
 "  -c, --chunking N Consider portions of the image to be part of the same\n"
@@ -54,7 +54,7 @@ namespace {
 "                   or any parent thereof.\n"
 "  -g-, --no-gtk    Don't use GTK windows for illustrating progress.\n"
 "  -h, --help       Display this message.\n"
-"  -o, --output     Save results in this file.  Default: stdout.\n"
+"  -o, --output O   Save results in files with names starting O.\n"
 "  -q, --quiet      Suppress various messages.\n"
 "  -r, --raw V1     V1 is the video without subs.\n"
 "  -s, --subs V2    V2 is the video with subs.\n"
@@ -114,8 +114,9 @@ int main(int argc, char** argv)
       "There is NO WARRANTY, to the extent permitted by law.\n" << std::endl;
   }
 
-  if (options.raw.empty() || options.subs.empty()) {
-    std::cerr << "Error: must specify two video files (see --help)" <<
+  if (options.raw.empty() || options.subs.empty() || options.output.empty()) {
+    std::cerr <<
+      "Error: must specify two video files and output (see --help)" <<
       std::endl;
     return EXIT_FAILURE;
   }
@@ -157,8 +158,11 @@ int main(int argc, char** argv)
     subliminal::extract_subtitles_options extract_options{
       options.alignment_frame, options.start_params, options.chunking_threshold
     };
+
+    subliminal::output out(options.output);
+
     subliminal::extract_subtitles(
-      raw_source, sub_source, extract_options, *feedback
+      raw_source, sub_source, extract_options, out, *feedback
     );
   } catch (ffmsxx::error const& e) {
     std::cerr << "Video error: " << e.what() << std::endl;

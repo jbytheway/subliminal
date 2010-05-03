@@ -5,6 +5,7 @@
 
 #include "visual_feedback.hpp"
 #include "transform_params.hpp"
+#include "output.hpp"
 
 namespace subliminal {
 
@@ -18,6 +19,7 @@ void extract_subtitles(
   ffmsxx::video_source& raw,
   ffmsxx::video_source& subs,
   extract_subtitles_options const&,
+  output&,
   visual_feedback&
 );
 

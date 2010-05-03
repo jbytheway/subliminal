@@ -3,20 +3,32 @@
 
 #include <boost/rational.hpp>
 
+#include "output.hpp"
 #include "conglomerate_pixel.hpp"
 
 namespace subliminal {
 
 class conglomerate_image {
   public:
-    conglomerate_image(boost::gil::rgb8c_view_t const&);
+    conglomerate_image(
+      int start_frame,
+      boost::rational<int64_t> const& start_time,
+      boost::gil::rgb8c_view_t const&
+    );
 
     bool consistent_overlap(boost::gil::rgb8c_view_t const&) const;
 
     void merge(conglomerate_image&&);
 
-    void finalize(boost::rational<int64_t> const& time);
+    void finalize(
+      int frame,
+      boost::rational<int64_t> const& time,
+      output&
+    );
   private:
+    int start_frame_;
+    boost::rational<int64_t> start_time_;
+    boost::gil::point2<ptrdiff_t> dims_;
     std::vector<conglomerate_pixel> pixels_;
 };
 

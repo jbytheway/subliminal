@@ -126,6 +126,7 @@ void extract_subtitles(
   ffmsxx::video_source& raw,
   ffmsxx::video_source& subs,
   extract_subtitles_options const& options,
+  output& out,
   visual_feedback& feedback
 )
 {
@@ -251,7 +252,9 @@ void extract_subtitles(
 
         /** \bug Should be unique_ptr, but gcc libstdc++ not good enough yet */
         std::shared_ptr<conglomerate_image> new_conglomerate(
-          new conglomerate_image(const_view(sub_chunk))
+          new conglomerate_image(
+            sub_frame_index, subs_time, const_view(sub_chunk)
+          )
         );
         std::vector<Conglomerates::iterator> to_erase;
         for (auto it = active_conglomerates.begin();
@@ -271,7 +274,7 @@ void extract_subtitles(
       // Conglomerates that have lost their activity indicate finished
       // subtitles
       BOOST_FOREACH(auto const& conglomerate, active_conglomerates) {
-        conglomerate->finalize(subs_time);
+        conglomerate->finalize(sub_frame_index, subs_time, out);
       }
 
       active_conglomerates = std::move(new_conglomerates);

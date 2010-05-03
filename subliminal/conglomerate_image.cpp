@@ -3,6 +3,7 @@
 #include <numeric>
 
 #include <boost/foreach.hpp>
+#include <boost/gil/image.hpp>
 #include <boost/gil/image_view.hpp>
 
 #include "delta_luminosity.hpp"
@@ -50,9 +51,24 @@ namespace {
     }
   };
 
+  struct extract_representative_colour {
+    typedef boost::gil::rgb8_pixel_t Pixel;
+    Pixel operator()(conglomerate_pixel const& c) {
+      if (c.options().empty()) return Pixel(0, 0, 0);
+      return c.options().front();
+    }
+  };
+
 }
 
-conglomerate_image::conglomerate_image(boost::gil::rgb8c_view_t const& v)
+conglomerate_image::conglomerate_image(
+  int start_frame,
+  boost::rational<int64_t> const& start_time,
+  boost::gil::rgb8c_view_t const& v
+) :
+  start_frame_(start_frame),
+  start_time_(start_time),
+  dims_(v.dimensions())
 {
   pixels_.reserve(v.width() * v.height());
   std::transform(
@@ -93,6 +109,8 @@ bool conglomerate_image::consistent_overlap(
 void conglomerate_image::merge(conglomerate_image&& other)
 {
   assert(pixels_.size() == other.pixels_.size());
+  start_frame_ = std::min(start_frame_, other.start_frame_);
+  start_time_ = std::min(start_time_, other.start_time_);
   std::transform(
     pixels_.begin(), pixels_.end(),
     other.pixels_.begin(),
@@ -101,8 +119,23 @@ void conglomerate_image::merge(conglomerate_image&& other)
   );
 }
 
-void conglomerate_image::finalize(boost::rational<int64_t> const& /*time*/)
+void conglomerate_image::finalize(
+  int frame,
+  boost::rational<int64_t> const& time,
+  output& out
+)
 {
+  if (frame - start_frame_ <= 10) {
+    // Only a few frames long; probably junk; ignore it
+    return;
+  }
+  boost::gil::rgb8_image_t final(dims_);
+  std::transform(
+    pixels_.begin(), pixels_.end(),
+    view(final).begin(),
+    extract_representative_colour()
+  );
+  out.save(start_time_, time, const_view(final));
 }
 
 }
