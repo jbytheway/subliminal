@@ -1,5 +1,7 @@
 #include "extract_subtitles.hpp"
 
+#include <set>
+
 #include <boost/foreach.hpp>
 #include <boost/mpl/vector_c.hpp>
 #include <boost/gil/image_view_factory.hpp>
@@ -21,6 +23,7 @@
 #include "delta_luminosity.hpp"
 #include "flood_fill.hpp"
 #include "chunkify.hpp"
+#include "conglomerate_image.hpp"
 
 namespace subliminal {
 
@@ -154,11 +157,10 @@ void extract_subtitles(
       ( options.alignment_frame ?
         *options.alignment_frame :std::min(25*5, subs.num_frames()/2) );
     auto subs_frame = subs.frame(sub_frame_index);
+    auto subs_time = subs_frame.time(subs_time_base);
     ffmsxx::video_frame const* raw_frame = NULL;
 
-    if (!raw_finder.get_closest_frame(
-        subs_frame.time(subs_time_base), raw_frame
-      )) {
+    if (!raw_finder.get_closest_frame(subs_time, raw_frame)) {
       SUBLIMINAL_FATAL("videos seem to be of wildly different lengths");
     }
 
@@ -172,15 +174,17 @@ void extract_subtitles(
   {
     // Step 2: Walk through the video, and do stuff
     closest_frame_finder raw_finder{raw};
+    /** \bug Should be unique_ptr, but gcc libstdc++ not good enough yet */
+    typedef std::set<std::shared_ptr<conglomerate_image>> Conglomerates;
+    Conglomerates active_conglomerates;
 
     for (int sub_frame_index = 0; sub_frame_index < subs.num_frames();
         sub_frame_index += 10) {
       auto subs_frame = subs.frame(sub_frame_index);
+      auto subs_time = subs_frame.time(subs_time_base);
       ffmsxx::video_frame const* raw_frame = NULL;
 
-      if (!raw_finder.get_closest_frame(
-          subs_frame.time(subs_time_base), raw_frame
-        )) {
+      if (!raw_finder.get_closest_frame(subs_time, raw_frame)) {
         return;
       }
 
@@ -234,6 +238,8 @@ void extract_subtitles(
         chunkify(const_view(outside_fill), options.chunking_threshold);
       feedback.messagef(boost::format("Got %1% chunks") % chunks.size());
 
+      Conglomerates new_conglomerates;
+
       BOOST_FOREACH(auto const& chunk, chunks) {
         feedback.show(const_view(chunk), 4);
 
@@ -242,7 +248,33 @@ void extract_subtitles(
         copy_under_mask(subs_view, const_view(chunk), view(sub_chunk));
 
         feedback.show(const_view(sub_chunk), 5);
+
+        /** \bug Should be unique_ptr, but gcc libstdc++ not good enough yet */
+        std::shared_ptr<conglomerate_image> new_conglomerate(
+          new conglomerate_image(const_view(sub_chunk))
+        );
+        std::vector<Conglomerates::iterator> to_erase;
+        for (auto it = active_conglomerates.begin();
+          it != active_conglomerates.end(); ++it) {
+          if ((*it)->consistent_overlap(const_view(sub_chunk))) {
+            new_conglomerate->merge(*std::move(*it));
+            to_erase.push_back(it);
+          }
+        }
+        BOOST_FOREACH(auto const it, to_erase) {
+          active_conglomerates.erase(it);
+        }
+
+        new_conglomerates.insert(std::move(new_conglomerate));
       }
+
+      // Conglomerates that have lost their activity indicate finished
+      // subtitles
+      BOOST_FOREACH(auto const& conglomerate, active_conglomerates) {
+        conglomerate->finalize(subs_time);
+      }
+
+      active_conglomerates = std::move(new_conglomerates);
 
       feedback.progress(sub_frame_index, subs.num_frames());
     }
