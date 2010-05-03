@@ -5,6 +5,10 @@
 #include <boost/foreach.hpp>
 #include <boost/gil/image.hpp>
 #include <boost/gil/image_view.hpp>
+#include <boost/spirit/home/phoenix/core.hpp>
+#include <boost/spirit/home/phoenix/bind.hpp>
+#include <boost/spirit/home/phoenix/operator.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include "delta_luminosity.hpp"
 
@@ -129,13 +133,24 @@ void conglomerate_image::finalize(
     // Only a few frames long; probably junk; ignore it
     return;
   }
+  namespace px = boost::phoenix;
+  using namespace px::arg_names;
+  size_t num_pix = std::count_if(
+    pixels_.begin(), pixels_.end(),
+    !px::bind(&conglomerate_pixel::empty, arg1)
+  );
+  if (num_pix < 100) {
+    // Only a few pixels large; probably junk; ignore it
+    return;
+  }
   boost::gil::rgb8_image_t final(dims_);
   std::transform(
     pixels_.begin(), pixels_.end(),
     view(final).begin(),
     extract_representative_colour()
   );
-  out.save(start_time_, time, const_view(final));
+  auto note = "";
+  out.save(start_time_, time, const_view(final), note);
 }
 
 }

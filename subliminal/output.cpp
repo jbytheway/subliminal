@@ -30,7 +30,8 @@ output::output(boost::filesystem::path const& root) :
 void output::save(
   boost::rational<int64_t> const& begin_time,
   boost::rational<int64_t> const& end_time,
-  boost::gil::rgb8c_view_t const& image
+  boost::gil::rgb8c_view_t const& image,
+  std::string const& other
 )
 {
   auto new_index = index_++;
@@ -38,7 +39,9 @@ void output::save(
   auto image_name = root_.file_string()+uniq+".png";
   boost::gil::png_write_view(image_name, image);
   txt_out_ << round_time(begin_time) << ' ' << round_time(end_time) << ' ' <<
-    image_name << std::endl;
+    image_name;
+  if (!other.empty()) txt_out_ << ' ' << other;
+  txt_out_ << std::endl;
 }
 
 }

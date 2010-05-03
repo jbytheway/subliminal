@@ -15,7 +15,8 @@ class output : boost::noncopyable {
     void save(
       boost::rational<int64_t> const& begin_time,
       boost::rational<int64_t> const& end_time,
-      boost::gil::rgb8c_view_t const& image
+      boost::gil::rgb8c_view_t const& image,
+      std::string const& other
     );
   private:
     boost::filesystem::path root_;
