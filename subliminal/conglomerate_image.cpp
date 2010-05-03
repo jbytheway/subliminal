@@ -117,7 +117,6 @@ bool conglomerate_image::consistent_overlap(
     return true;
   } else {
     // there was inconsistent overlap
-    std::printf("bad overlap %d\n", *nth_it);
     return false;
   }
 }
