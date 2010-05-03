@@ -15,6 +15,8 @@ struct extract_subtitles_options {
   boost::optional<int> alignment_frame;
   transform_params start_params;
   boost::fusion::vector<int, int> chunking_threshold;
+  int frame_interval;
+  bool quiet;
 };
 
 void extract_subtitles(

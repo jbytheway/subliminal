@@ -22,6 +22,7 @@ namespace {
   struct Options {
     Options() :
       chunking_threshold{10, 3},
+      frame_interval{1},
       gtk{true},
       help{},
       quiet{}
@@ -30,6 +31,7 @@ namespace {
     boost::optional<int> alignment_frame;
     boost::fusion::vector<int, int> chunking_threshold;
     boost::filesystem::path data;
+    int frame_interval;
     bool gtk;
     bool help;
     bool quiet;
@@ -54,6 +56,9 @@ namespace {
 "  -d, --data DATA  Look for program data in DATA.  Default is to search for\n"
 "                   a directory named 'data' in the executable's directory\n"
 "                   or any parent thereof.\n"
+"  -f, --frame-interval N\n"
+"                   Analyse every Nth frame.  Default 1, but increase to go\n"
+"                   faster at the expense of timing precision.\n"
 "  -g-, --no-gtk    Don't use GTK windows for illustrating progress.\n"
 "  -h, --help       Display this message.\n"
 "  -o, --output O   Save results in files with names starting O.\n"
@@ -72,16 +77,17 @@ namespace {
   {
     optimal::OptionsParser parser;
     Options results;
-    parser.addOption("align",     'a', &results.alignment_frame);
-    parser.addOption("chunking",  'c', &results.chunking_threshold);
-    parser.addOption("data",      'd', &results.data);
-    parser.addOption("gtk",       'g', &results.gtk);
-    parser.addOption("help",      'h', &results.help);
-    parser.addOption("output",    'o', &results.output);
-    parser.addOption("quiet",     'q', &results.quiet);
-    parser.addOption("raw",       'r', &results.raw);
-    parser.addOption("subs",      's', &results.subs);
-    parser.addOption("transform", 't', &results.start_params);
+    parser.addOption("align",          'a', &results.alignment_frame);
+    parser.addOption("chunking",       'c', &results.chunking_threshold);
+    parser.addOption("data",           'd', &results.data);
+    parser.addOption("frame-interval", 'f', &results.frame_interval);
+    parser.addOption("gtk",            'g', &results.gtk);
+    parser.addOption("help",           'h', &results.help);
+    parser.addOption("output",         'o', &results.output);
+    parser.addOption("quiet",          'q', &results.quiet);
+    parser.addOption("raw",            'r', &results.raw);
+    parser.addOption("subs",           's', &results.subs);
+    parser.addOption("transform",      't', &results.start_params);
 
     if (parser.parse(argc, argv)) {
       std::cerr <<
@@ -158,7 +164,9 @@ int main(int argc, char** argv)
     }
 
     subliminal::extract_subtitles_options extract_options{
-      options.alignment_frame, options.start_params, options.chunking_threshold
+      options.alignment_frame, options.start_params,
+      options.chunking_threshold, options.frame_interval,
+      options.quiet
     };
 
     subliminal::output out(options.output);

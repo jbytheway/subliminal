@@ -130,6 +130,10 @@ void extract_subtitles(
   visual_feedback& feedback
 )
 {
+  if (options.frame_interval <= 0) {
+    SUBLIMINAL_FATAL("silly frame interval");
+  }
+
   // We want both sources producing video at the same resolution and pixel
   // format.
   // For resolution we mimic the subs since they're what we're extracting
@@ -180,7 +184,7 @@ void extract_subtitles(
     Conglomerates active_conglomerates;
 
     for (int sub_frame_index = 0; sub_frame_index < subs.num_frames();
-        sub_frame_index += 10) {
+        sub_frame_index += options.frame_interval) {
       auto subs_frame = subs.frame(sub_frame_index);
       auto subs_time = subs_frame.time(subs_time_base);
       ffmsxx::video_frame const* raw_frame = NULL;
@@ -237,7 +241,9 @@ void extract_subtitles(
       // Chunkify
       auto chunks =
         chunkify(const_view(outside_fill), options.chunking_threshold);
-      feedback.messagef(boost::format("Got %1% chunks") % chunks.size());
+      if (!options.quiet) {
+        feedback.messagef(boost::format("Got %1% chunks") % chunks.size());
+      }
 
       Conglomerates new_conglomerates;
 
