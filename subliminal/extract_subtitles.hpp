@@ -1,6 +1,8 @@
 #ifndef SUBLIMINAL__EXTRACT_SUBTITLES_HPP
 #define SUBLIMINAL__EXTRACT_SUBTITLES_HPP
 
+#include <boost/fusion/include/vector.hpp>
+
 #include <ffmsxx/fwd.hpp>
 
 #include "visual_feedback.hpp"
@@ -12,7 +14,7 @@ namespace subliminal {
 struct extract_subtitles_options {
   boost::optional<int> alignment_frame;
   transform_params start_params;
-  int chunking_threshold;
+  boost::fusion::vector<int, int> chunking_threshold;
 };
 
 void extract_subtitles(

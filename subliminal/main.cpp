@@ -3,6 +3,7 @@
 #include <boost/scoped_ptr.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/filesystem/operations.hpp>
+#include <boost/fusion/include/io.hpp>
 
 #include <optimal/optionsparser.hpp>
 
@@ -20,14 +21,14 @@ namespace {
 
   struct Options {
     Options() :
-      chunking_threshold{10},
+      chunking_threshold{10, 3},
       gtk{true},
       help{},
       quiet{}
     {}
 
     boost::optional<int> alignment_frame;
-    int chunking_threshold;
+    boost::fusion::vector<int, int> chunking_threshold;
     boost::filesystem::path data;
     bool gtk;
     bool help;
@@ -46,9 +47,10 @@ namespace {
 "  subliminal [OPTIONS] --output O --raw V1 --subs V2\n"
 "\n"
 "  -a, --align N    Use frame N for determining alignment.\n"
-"  -c, --chunking N Consider portions of the image to be part of the same\n"
-"                   subtitle if they are within N pixels (as measured in the\n"
-"                   l1 norm, default 10).\n"
+"  -c, --chunking (X Y)\n"
+"                   Consider portions of the image to be part of the same\n"
+"                   subtitle if they are within X, Y pixels in the x, y\n"
+"                   directions respectively.\n"
 "  -d, --data DATA  Look for program data in DATA.  Default is to search for\n"
 "                   a directory named 'data' in the executable's directory\n"
 "                   or any parent thereof.\n"

@@ -3,21 +3,28 @@
 #include <stack>
 
 #include <boost/foreach.hpp>
+#include <boost/fusion/include/at.hpp>
 #include <boost/gil/image.hpp>
 #include <boost/gil/image_view.hpp>
 
 namespace subliminal {
 
 std::vector<boost::gil::gray8_image_t>
-chunkify(boost::gil::gray8c_view_t const& v, int range)
+chunkify(
+  boost::gil::gray8c_view_t const& v,
+  boost::fusion::vector<int, int> const& range
+)
 {
-  assert(range > 0);
+  int const x_range = boost::fusion::at<boost::mpl::int_<0>>(range);
+  int const y_range = boost::fusion::at<boost::mpl::int_<1>>(range);
+  assert(x_range > 0);
+  assert(y_range > 0);
   typedef boost::gil::gray8c_view_t::point_t Point;
   typedef boost::gil::gray8c_view_t::locator Locator;
 
   std::vector<Point> diffs;
-  for (int x = -range; x <= range; ++x) {
-    for (int y = abs(x)-range; y <= range-abs(x); ++y) {
+  for (int x = -x_range; x <= x_range; ++x) {
+    for (int y = -y_range; y <= y_range; ++y) {
       if (x == 0 && y == 0) continue;
       diffs.push_back(Point(x, y));
     }
