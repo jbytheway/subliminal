@@ -11,6 +11,7 @@ namespace subliminal {
 struct extract_subtitles_options {
   boost::optional<int> alignment_frame;
   transform_params start_params;
+  int chunking_threshold;
 };
 
 void extract_subtitles(

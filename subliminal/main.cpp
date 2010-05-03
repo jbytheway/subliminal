@@ -20,12 +20,14 @@ namespace {
 
   struct Options {
     Options() :
+      chunking_threshold{10},
       gtk{true},
       help{},
       quiet{}
     {}
 
     boost::optional<int> alignment_frame;
+    int chunking_threshold;
     boost::filesystem::path data;
     bool gtk;
     bool help;
@@ -44,6 +46,9 @@ namespace {
 "  subliminal [OPTIONS] --raw V1 --subs V2\n"
 "\n"
 "  -a, --align N    Use frame N for determining alignment.\n"
+"  -c, --chunking N Consider portions of the image to be part of the same\n"
+"                   subtitle if they are within N pixels (as measured in the\n"
+"                   l1 norm, default 10).\n"
 "  -d, --data DATA  Look for program data in DATA.  Default is to search for\n"
 "                   a directory named 'data' in the executable's directory\n"
 "                   or any parent thereof.\n"
@@ -66,6 +71,7 @@ namespace {
     optimal::OptionsParser parser;
     Options results;
     parser.addOption("align",     'a', &results.alignment_frame);
+    parser.addOption("chunking",  'c', &results.chunking_threshold);
     parser.addOption("data",      'd', &results.data);
     parser.addOption("gtk",       'g', &results.gtk);
     parser.addOption("help",      'h', &results.help);
@@ -149,7 +155,7 @@ int main(int argc, char** argv)
     }
 
     subliminal::extract_subtitles_options extract_options{
-      options.alignment_frame, options.start_params
+      options.alignment_frame, options.start_params, options.chunking_threshold
     };
     subliminal::extract_subtitles(
       raw_source, sub_source, extract_options, *feedback

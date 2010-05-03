@@ -6,6 +6,8 @@
 #include <boost/gil/image.hpp>
 #include <boost/gil/typedefs.hpp>
 #include <boost/format.hpp>
+#include <boost/spirit/home/phoenix/core/argument.hpp>
+#include <boost/spirit/home/phoenix/operator.hpp>
 
 #include <ffmsxx/video_source.hpp>
 #include <ffmsxx/video_dimensions.hpp>
@@ -17,6 +19,7 @@
 #include "find_best_transform.hpp"
 #include "delta_luminosity.hpp"
 #include "flood_fill.hpp"
+#include "chunkify.hpp"
 
 namespace subliminal {
 
@@ -71,6 +74,12 @@ namespace {
     }
 
     int thresh_;
+  };
+
+  struct invert {
+    void operator()(gil::gray8_pixel_t& p) const {
+      p[0] = ~p[0];
+    }
   };
 
 }
@@ -174,7 +183,20 @@ void extract_subtitles(
       fill_pixels(view(outside_fill), 0);
       flood_fill(const_view(extreme_values), view(outside_fill));
 
-      feedback.show(const_view(outside_fill), 3);
+      // Invert
+      for_each_pixel(view(outside_fill), invert());
+
+      feedback.show(const_view(outside_fill), 2);
+
+      // Chunkify
+      auto chunks =
+        chunkify(const_view(outside_fill), options.chunking_threshold);
+
+      if (!chunks.empty()) {
+        feedback.messagef(boost::format("Got %1% chunks") % chunks.size());
+
+        feedback.show(const_view(chunks.back()), 3);
+      }
 
       feedback.progress(sub_frame_index, subs.num_frames());
     }
