@@ -195,7 +195,7 @@ void extract_subtitles(
       feedback.messagef(boost::format("Got %1% chunks") % chunks.size());
 
       BOOST_FOREACH(auto const& chunk, chunks) {
-        feedback.show(const_view(chunk), 3);
+        feedback.show(const_view(chunk), 4);
       }
 
       feedback.progress(sub_frame_index, subs.num_frames());

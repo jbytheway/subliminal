@@ -29,7 +29,7 @@ struct gtk_feedback::impl {
   }
 
   struct ThreadObj : boost::noncopyable {
-    static const int num_images = 4;
+    static const int num_images = 6;
 
     ThreadObj(boost::filesystem::path dataPath, std::ostream& o) :
       initted{false},
@@ -54,15 +54,19 @@ struct gtk_feedback::impl {
       Glib::RefPtr<Gnome::Glade::Xml> xml =
         Gnome::Glade::Xml::create(gladePath.file_string());
       xml->get_widget("MainWindow", window);
-      BOOST_MPL_ASSERT_RELATION(num_images, ==, 4);
+      BOOST_MPL_ASSERT_RELATION(num_images, ==, 6);
       xml->get_widget("Image0", images[0]);
       xml->get_widget("Image1", images[1]);
       xml->get_widget("Image2", images[2]);
       xml->get_widget("Image3", images[3]);
+      xml->get_widget("Image4", images[4]);
+      xml->get_widget("Image5", images[5]);
       assert(images[0]);
       assert(images[1]);
       assert(images[2]);
       assert(images[3]);
+      assert(images[4]);
+      assert(images[5]);
       for (int i=0; i<num_images; ++i) {
         pixbuf_show_signals[i].connect(
           sigc::bind(sigc::mem_fun(this, &ThreadObj::update_image), i)

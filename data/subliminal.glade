@@ -7,7 +7,7 @@
     <child>
       <widget class="GtkTable" id="table1">
         <property name="visible">True</property>
-        <property name="n_rows">2</property>
+        <property name="n_rows">3</property>
         <property name="n_columns">2</property>
         <child>
           <widget class="GtkImage" id="Image0">
@@ -45,6 +45,28 @@
             <property name="right_attach">2</property>
             <property name="top_attach">1</property>
             <property name="bottom_attach">2</property>
+          </packing>
+        </child>
+        <child>
+          <widget class="GtkImage" id="Image4">
+            <property name="visible">True</property>
+            <property name="stock">gtk-missing-image</property>
+          </widget>
+          <packing>
+            <property name="top_attach">2</property>
+            <property name="bottom_attach">3</property>
+          </packing>
+        </child>
+        <child>
+          <widget class="GtkImage" id="Image5">
+            <property name="visible">True</property>
+            <property name="stock">gtk-missing-image</property>
+          </widget>
+          <packing>
+            <property name="left_attach">1</property>
+            <property name="right_attach">2</property>
+            <property name="top_attach">2</property>
+            <property name="bottom_attach">3</property>
           </packing>
         </child>
       </widget>
