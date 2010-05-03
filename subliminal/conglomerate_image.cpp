@@ -14,6 +14,9 @@
 
 namespace subliminal {
 
+namespace px = boost::phoenix;
+using namespace px::arg_names;
+
 namespace {
 
   struct identity {
@@ -63,6 +66,15 @@ namespace {
     }
   };
 
+  struct replace_black_with {
+    typedef boost::gil::rgb8_pixel_t Pixel;
+    replace_black_with(Pixel const& replacement) : replacement_(replacement) {}
+    void operator()(Pixel& p) {
+      if (p == Pixel(0, 0, 0)) p = replacement_;
+    }
+    Pixel replacement_;
+  };
+
 }
 
 conglomerate_image::conglomerate_image(
@@ -110,6 +122,17 @@ bool conglomerate_image::consistent_overlap(
   }
 }
 
+boost::gil::rgb8_pixel_t conglomerate_image::background_colour() const
+{
+  auto it = std::find_if(
+    pixels_.begin(), pixels_.end(),
+    !px::bind(&conglomerate_pixel::empty, arg1)
+  );
+  assert(it != pixels_.end());
+  assert(!it->empty());
+  return it->options().front();
+}
+
 void conglomerate_image::merge(conglomerate_image&& other)
 {
   assert(pixels_.size() == other.pixels_.size());
@@ -133,8 +156,6 @@ void conglomerate_image::finalize(
     // Only a few frames long; probably junk; ignore it
     return;
   }
-  namespace px = boost::phoenix;
-  using namespace px::arg_names;
   size_t num_pix = std::count_if(
     pixels_.begin(), pixels_.end(),
     !px::bind(&conglomerate_pixel::empty, arg1)
@@ -149,6 +170,7 @@ void conglomerate_image::finalize(
     view(final).begin(),
     extract_representative_colour()
   );
+  for_each_pixel(view(final), replace_black_with(background_colour()));
   auto note = "";
   out.save(start_time_, time, const_view(final), note);
 }
