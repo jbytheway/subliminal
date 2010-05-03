@@ -1,5 +1,6 @@
 #include "extract_subtitles.hpp"
 
+#include <boost/foreach.hpp>
 #include <boost/mpl/vector_c.hpp>
 #include <boost/gil/image_view_factory.hpp>
 #include <boost/gil/image_view.hpp>
@@ -186,16 +187,15 @@ void extract_subtitles(
       // Invert
       for_each_pixel(view(outside_fill), invert());
 
-      feedback.show(const_view(outside_fill), 2);
+      feedback.show(const_view(outside_fill), 3);
 
       // Chunkify
       auto chunks =
         chunkify(const_view(outside_fill), options.chunking_threshold);
+      feedback.messagef(boost::format("Got %1% chunks") % chunks.size());
 
-      if (!chunks.empty()) {
-        feedback.messagef(boost::format("Got %1% chunks") % chunks.size());
-
-        feedback.show(const_view(chunks.back()), 3);
+      BOOST_FOREACH(auto const& chunk, chunks) {
+        feedback.show(const_view(chunk), 3);
       }
 
       feedback.progress(sub_frame_index, subs.num_frames());
