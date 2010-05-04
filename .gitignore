@@ -5,5 +5,7 @@
 *.la
 /user.mk
 /config.mk
+/release
+/optimised
 /*/Makefile
 /*/*/Makefile
