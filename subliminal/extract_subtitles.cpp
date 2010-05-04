@@ -11,6 +11,7 @@
 #include <boost/format.hpp>
 #include <boost/spirit/home/phoenix/core/argument.hpp>
 #include <boost/spirit/home/phoenix/operator.hpp>
+#include <boost/fusion/include/tuple.hpp>
 
 #include <ffmsxx/video_source.hpp>
 #include <ffmsxx/video_dimensions.hpp>
@@ -183,7 +184,23 @@ void extract_subtitles(
     typedef std::set<std::shared_ptr<conglomerate_image>> Conglomerates;
     Conglomerates active_conglomerates;
 
-    for (int sub_frame_index = 0; sub_frame_index < subs.num_frames();
+    boost::optional<int> requested_begin_frame, requested_end_frame;
+    std::tie(requested_begin_frame, requested_end_frame) = options.bounds;
+
+    int const begin_frame = requested_begin_frame ? *requested_begin_frame : 0;
+    int const end_frame = requested_end_frame ?
+      std::min(*requested_end_frame, subs.num_frames()) : subs.num_frames();
+
+    if (begin_frame < 0 || end_frame < 0 || end_frame < begin_frame) {
+      SUBLIMINAL_FATAL("nonsensical frame bounds");
+    }
+
+    feedback.messagef(
+      boost::format("analyzing frames from %d to %d") %
+      begin_frame % end_frame
+    );
+
+    for (int sub_frame_index = begin_frame; sub_frame_index < end_frame;
         sub_frame_index += options.frame_interval) {
       auto subs_frame = subs.frame(sub_frame_index);
       auto subs_time = subs_frame.time(subs_time_base);
@@ -285,7 +302,7 @@ void extract_subtitles(
 
       active_conglomerates = std::move(new_conglomerates);
 
-      feedback.progress(sub_frame_index, subs.num_frames());
+      feedback.progress(sub_frame_index, end_frame);
     }
   }
 }

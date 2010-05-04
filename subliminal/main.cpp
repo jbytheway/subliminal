@@ -29,6 +29,8 @@ namespace {
     {}
 
     boost::optional<int> alignment_frame;
+    typedef boost::optional<int> OInt;
+    std::pair<OInt, OInt> bounds;
     boost::fusion::vector<int, int> chunking_threshold;
     boost::filesystem::path data;
     int frame_interval;
@@ -49,6 +51,7 @@ namespace {
 "  subliminal [OPTIONS] --output O --raw V1 --subs V2\n"
 "\n"
 "  -a, --align N    Use frame N for determining alignment.\n"
+"  -b, --begin B    Analyze from frame B\n"
 "  -c, --chunking (X Y)\n"
 "                   Consider portions of the image to be part of the same\n"
 "                   subtitle if they are within X, Y pixels in the x, y\n"
@@ -56,8 +59,9 @@ namespace {
 "  -d, --data DATA  Look for program data in DATA.  Default is to search for\n"
 "                   a directory named 'data' in the executable's directory\n"
 "                   or any parent thereof.\n"
+"  -e, --end E      Analyze only before frame E\n"
 "  -f, --frame-interval N\n"
-"                   Analyse every Nth frame.  Default 1, but increase to go\n"
+"                   Analyze every Nth frame.  Default 1, but increase to go\n"
 "                   faster at the expense of timing precision.\n"
 "  -g-, --no-gtk    Don't use GTK windows for illustrating progress.\n"
 "  -h, --help       Display this message.\n"
@@ -78,8 +82,10 @@ namespace {
     optimal::OptionsParser parser;
     Options results;
     parser.addOption("align",          'a', &results.alignment_frame);
+    parser.addOption("begin",          'b', &results.bounds.first);
     parser.addOption("chunking",       'c', &results.chunking_threshold);
     parser.addOption("data",           'd', &results.data);
+    parser.addOption("end",            'e', &results.bounds.second);
     parser.addOption("frame-interval", 'f', &results.frame_interval);
     parser.addOption("gtk",            'g', &results.gtk);
     parser.addOption("help",           'h', &results.help);
@@ -166,7 +172,7 @@ int main(int argc, char** argv)
     subliminal::extract_subtitles_options extract_options{
       options.alignment_frame, options.start_params,
       options.chunking_threshold, options.frame_interval,
-      options.quiet
+      options.bounds, options.quiet
     };
 
     subliminal::output out(options.output);
