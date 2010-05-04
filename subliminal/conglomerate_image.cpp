@@ -121,17 +121,6 @@ bool conglomerate_image::consistent_overlap(
   }
 }
 
-boost::gil::rgb8_pixel_t conglomerate_image::background_colour() const
-{
-  auto it = std::find_if(
-    pixels_.begin(), pixels_.end(),
-    !px::bind(&conglomerate_pixel::empty, arg1)
-  );
-  assert(it != pixels_.end());
-  assert(!it->empty());
-  return it->options().front();
-}
-
 void conglomerate_image::merge(conglomerate_image&& other)
 {
   assert(pixels_.size() == other.pixels_.size());
@@ -143,6 +132,17 @@ void conglomerate_image::merge(conglomerate_image&& other)
     pixels_.begin(),
     destructive_merge()
   );
+}
+
+boost::gil::rgb8_pixel_t conglomerate_image::background_colour() const
+{
+  auto it = std::find_if(
+    pixels_.begin(), pixels_.end(),
+    !px::bind(&conglomerate_pixel::empty, arg1)
+  );
+  assert(it != pixels_.end());
+  assert(!it->empty());
+  return it->options().front();
 }
 
 void conglomerate_image::finalize(
