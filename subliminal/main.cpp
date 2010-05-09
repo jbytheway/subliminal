@@ -55,7 +55,7 @@ namespace {
 "  -c, --chunking (X Y)\n"
 "                   Consider portions of the image to be part of the same\n"
 "                   subtitle if they are within X, Y pixels in the x, y\n"
-"                   directions respectively.\n"
+"                   directions respectively.  Default (10 3)\n"
 "  -d, --data DATA  Look for program data in DATA.  Default is to search for\n"
 "                   a directory named 'data' in the executable's directory\n"
 "                   or any parent thereof.\n"
