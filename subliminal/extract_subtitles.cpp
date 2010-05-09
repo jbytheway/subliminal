@@ -121,6 +121,28 @@ namespace {
     transform_pixels(in, mask, out, copy_if());
   }
 
+  template<typename View>
+  size_t non_black_height(View const& chunk) {
+    gil::gray8_pixel_t black(0);
+    size_t first_black_row = chunk.height();
+    size_t last_black_row = 0;
+    for (size_t y=0; y<size_t(chunk.height()); ++y) {
+      bool black_row = true;
+      for (auto it = chunk.row_begin(y); it != chunk.row_end(y); ++it) {
+        if ((*it) != black) {
+          black_row = false;
+          break;
+        }
+      }
+      if (!black_row) {
+        last_black_row = y;
+        if (y < first_black_row) first_black_row = y;
+      }
+    }
+    if (last_black_row < first_black_row) return 0;
+    return last_black_row - first_black_row + 1;
+  }
+
 }
 
 void extract_subtitles(
@@ -261,6 +283,20 @@ void extract_subtitles(
       if (!options.quiet) {
         feedback.messagef(boost::format("Got %1% chunks") % chunks.size());
       }
+      if (chunks.size() > 5) {
+        feedback.message("implausibly many chunks; writing frame off");
+        continue;
+      }
+
+      bool bad = false;
+      BOOST_FOREACH(auto const& chunk, chunks) {
+        if (non_black_height(const_view(chunk)) > size_t(dims.y)/5) {
+          feedback.message("implausibly high chunk; writing frame off");
+          bad = true;
+          break;
+        }
+      }
+      if (bad) continue;
 
       Conglomerates new_conglomerates;
 
