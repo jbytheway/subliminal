@@ -31,6 +31,9 @@ class prepixbuf {
       barrier_.reset(new boost::barrier(2));
       signal();
       barrier_->wait();
+      // If you delete the barrier too soon after waiting on it then sometimes
+      // things break; use this mutex to wait a bit for the other thread
+      boost::lock_guard<boost::mutex> scoped_lock(barrier_mutex_);
       barrier_.reset();
     }
 
@@ -46,6 +49,7 @@ class prepixbuf {
           rowstride_
         );
       image.set(pixbuf);
+      boost::lock_guard<boost::mutex> scoped_lock2(barrier_mutex_);
       barrier_->wait();
     }
   private:
@@ -54,6 +58,7 @@ class prepixbuf {
     ffmsxx::video_dimensions dims_;
     int rowstride_;
     boost::mutex predata_mutex_;
+    boost::mutex barrier_mutex_;
     boost::scoped_ptr<boost::barrier> barrier_;
 };
 
