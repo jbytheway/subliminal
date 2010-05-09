@@ -20,8 +20,6 @@ class conglomerate_image {
 
     void merge(conglomerate_image&&);
 
-    boost::gil::rgb8_pixel_t background_colour() const;
-
     void finalize(
       int frame,
       boost::rational<int64_t> const& time,

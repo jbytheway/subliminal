@@ -8,9 +8,11 @@
 #include <boost/spirit/home/phoenix/core.hpp>
 #include <boost/spirit/home/phoenix/bind.hpp>
 #include <boost/spirit/home/phoenix/operator.hpp>
+#include <boost/spirit/home/phoenix/stl.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include "delta_luminosity.hpp"
+#include "means_cluster.hpp"
 
 namespace subliminal {
 
@@ -75,6 +77,27 @@ namespace {
     Pixel replacement_;
   };
 
+  struct pixel_to_point {
+    Point<float> operator()(boost::gil::rgb8_pixel_t const& p) const {
+      return Point<float>(p[0], p[1], p[2]);
+    }
+  };
+
+  struct point_to_pixel {
+    boost::gil::rgb8_pixel_t operator()(Point<float> const& p) const {
+      return boost::gil::rgb8_pixel_t(p[0], p[1], p[2]);
+    }
+  };
+
+  struct distance_from {
+    typedef boost::gil::rgb8_pixel_t Pixel;
+    distance_from(Pixel const& centre) : centre_(pixel_to_point()(centre)) {}
+    int operator()(Pixel const& p) {
+      double distance = (pixel_to_point()(p) - centre_).length();
+      return std::min(distance*2, 255.0);
+    }
+    Point<float> centre_;
+  };
 }
 
 conglomerate_image::conglomerate_image(
@@ -134,17 +157,6 @@ void conglomerate_image::merge(conglomerate_image&& other)
   );
 }
 
-boost::gil::rgb8_pixel_t conglomerate_image::background_colour() const
-{
-  auto it = std::find_if(
-    pixels_.begin(), pixels_.end(),
-    !px::bind(&conglomerate_pixel::empty, arg1)
-  );
-  assert(it != pixels_.end());
-  assert(!it->empty());
-  return it->options().front();
-}
-
 void conglomerate_image::finalize(
   int frame,
   boost::rational<int64_t> const& time,
@@ -163,13 +175,35 @@ void conglomerate_image::finalize(
     // Only a few pixels large; probably junk; ignore it
     return;
   }
-  boost::gil::rgb8_image_t final(dims_);
+  typedef boost::gil::rgb8_pixel_t Pixel;
+  std::vector<Pixel> all_pixels;
+  std::for_each(
+    pixels_.begin(), pixels_.end(),
+    px::insert(
+      px::ref(all_pixels), px::end(px::ref(all_pixels)),
+      px::begin(px::bind(&conglomerate_pixel::options, arg1)),
+      px::end(px::bind(&conglomerate_pixel::options, arg1))
+    )
+  );
+  std::vector<Point<float>> all_points;
+  std::transform(
+    all_pixels.begin(), all_pixels.end(),
+    std::back_inserter(all_points),
+    pixel_to_point()
+  );
+  all_pixels.clear(); // Free up possibly-significant memory
+  auto means = means_cluster(all_points, 2);
+  boost::gil::rgb8_image_t flattened(dims_);
   std::transform(
     pixels_.begin(), pixels_.end(),
-    view(final).begin(),
+    view(flattened).begin(),
     extract_representative_colour()
   );
-  for_each_pixel(view(final), replace_black_with(background_colour()));
+  boost::gil::gray8_image_t final(dims_);
+  transform_pixels(
+    const_view(flattened), view(final),
+    distance_from(point_to_pixel()(means[0]))
+  );
   auto note = "";
   out.save(start_time_, time, const_view(final), note);
 }
