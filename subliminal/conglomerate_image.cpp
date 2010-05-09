@@ -93,6 +93,7 @@ namespace {
     typedef boost::gil::rgb8_pixel_t Pixel;
     distance_from(Pixel const& centre) : centre_(pixel_to_point()(centre)) {}
     int operator()(Pixel const& p) {
+      if (p == Pixel(0, 0, 0)) return 255;
       double distance = (pixel_to_point()(p) - centre_).length();
       return std::min(distance*2, 255.0);
     }
@@ -199,13 +200,16 @@ void conglomerate_image::finalize(
     view(flattened).begin(),
     extract_representative_colour()
   );
-  boost::gil::gray8_image_t final(dims_);
-  transform_pixels(
-    const_view(flattened), view(final),
-    distance_from(point_to_pixel()(means[0]))
-  );
+  std::vector<boost::gil::gray8_image_t> finals;
+  BOOST_FOREACH(auto const& mean, means) {
+    finals.emplace_back(dims_);
+    transform_pixels(
+      const_view(flattened), view(finals.back()),
+      distance_from(point_to_pixel()(mean))
+    );
+  }
   auto note = "";
-  out.save(start_time_, time, const_view(final), note);
+  out.save(start_time_, time, finals, note);
 }
 
 }

@@ -1,5 +1,6 @@
 #include "output.hpp"
 
+#include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <boost/gil/extension/io/png_io.hpp>
 
@@ -30,16 +31,18 @@ output::output(boost::filesystem::path const& root) :
 void output::save(
   boost::rational<int64_t> const& begin_time,
   boost::rational<int64_t> const& end_time,
-  boost::gil::gray8c_view_t const& image,
+  std::vector<boost::gil::gray8_image_t> const& images,
   std::string const& other
 )
 {
-  auto new_index = index_++;
-  std::string uniq = (boost::format(".%04d") % new_index).str();
-  auto image_name = root_.file_string()+uniq+".png";
-  boost::gil::png_write_view(image_name, image);
-  txt_out_ << round_time(begin_time) << ' ' << round_time(end_time) << ' ' <<
-    image_name;
+  txt_out_ << round_time(begin_time) << ' ' << round_time(end_time);
+  BOOST_FOREACH(auto const& image, images) {
+    auto new_index = index_++;
+    std::string uniq = (boost::format(".%04d") % new_index).str();
+    auto image_name = root_.file_string()+uniq+".png";
+    boost::gil::png_write_view(image_name, const_view(image));
+    txt_out_ << ' ' << image_name;
+  }
   if (!other.empty()) txt_out_ << ' ' << other;
   txt_out_ << std::endl;
 }
