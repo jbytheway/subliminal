@@ -39,7 +39,10 @@ means_cluster(std::vector<Point<float>> const& data, size_t const num)
     old_means.push_back(candidate);
   }
 
-  while (true) {
+  trials = 0;
+  size_t const max_trials = 1000;
+  while (trials < max_trials) {
+    ++trials;
     using namespace boost::accumulators;
     typedef accumulator_set<Pt, stats<tag::mean> > Acc;
     std::vector<Acc> accumulators(num);
@@ -63,6 +66,10 @@ means_cluster(std::vector<Point<float>> const& data, size_t const num)
 
     if (new_means == old_means) break;
     old_means = std::move(new_means);
+  }
+
+  if (trials == max_trials) {
+    std::fprintf(stderr, "Warning: clustering algorithm failed to converge\n");
   }
 
   return old_means;
