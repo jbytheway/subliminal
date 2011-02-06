@@ -1,5 +1,5 @@
 {
-  best_score = 0;
+  best_score = -1e80; # Minus infinity
   for (i = 3; i <= NF; ++i) {
     text_file = gensub(/png/, "txt", "g", $i);
     command = scorer" < "text_file;

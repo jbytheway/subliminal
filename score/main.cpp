@@ -20,14 +20,14 @@ int main(int argc, char const* const* const argv)
     return 1;
   }
 
-  std::unordered_map<std::uint8_t, size_t> frequency_map;
+  std::unordered_map<std::uint8_t, uint64_t> frequency_map;
   size_t total = 0;
   std::string line;
   while (std::getline(freqs, line)) {
     std::istringstream is(line);
     char c;
     is.get(c);
-    size_t count;
+    uint64_t count;
     if (!(is >> count)) {
       std::cerr << "malformed line: " << line << std::endl;
       return 1;
@@ -36,11 +36,23 @@ int main(int argc, char const* const* const argv)
     total += count;
   }
 
+  double const smoothed_total = total+256;
+
   // Convert frequency map to score, with laplacian smoothing
   std::array<double, 256> scores;
-  std::fill(scores.begin(), scores.end(), 0.0);
+  std::fill(scores.begin(), scores.end(), std::log(1.0/smoothed_total));
+  double expected_score = 0.0;
   BOOST_FOREACH(auto const& p, frequency_map) {
-    scores[p.first] = std::log(p.second+1);
+    uint64_t const smoothed_count = p.second+1;
+    double const probability = smoothed_count / smoothed_total;
+    double const score = std::log(probability);
+    scores[p.first] = score;
+    expected_score += score*probability;
+  }
+
+  // Rescale all the scores so that the expected scoring rate is 0
+  BOOST_FOREACH(auto& score, scores) {
+    score -= expected_score;
   }
 
   // Now read the input, and score it
