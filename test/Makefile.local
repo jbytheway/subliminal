@@ -66,7 +66,8 @@ $(TXTS): %.txt: %.tif
 
 $(FINALS): %.final: %.out forward-txts \
 	$(SCORE) character-frequencies pick_best_ocr.awk
-	<$< gawk -f pick_best_ocr.awk -v scorer="$(SCORE) character-frequencies" >$@
+	<$< gawk -f pick_best_ocr.awk -v scorer="$(SCORE) character-frequencies" | \
+		sed 's/ *$$//' >$@
 
 # Step 7: Compare each .final file with its reference version to check that the
 # output is correct.
