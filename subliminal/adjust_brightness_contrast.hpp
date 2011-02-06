@@ -15,7 +15,7 @@ class adjust_brightness_contrast {
     void operator()(P& t) {
       BOOST_MPL_ASSERT_RELATION(boost::gil::size<P>::value,==,1);
       typedef typename std::remove_reference<decltype(t[0])>::type Value;
-      t[0] = clamp<Value>(t[0]*l_scale_+l_shift_);
+      t[0] = clamp<Value>(std::round(t[0]*l_scale_+l_shift_));
     }
   private:
     double l_shift_;
