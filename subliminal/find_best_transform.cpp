@@ -5,7 +5,7 @@
 
 #include "linear_state_space.hpp"
 #include "product_state_space.hpp"
-#include "optimize.hpp"
+#include "find_minimum_on_graph.hpp"
 #include "delta_luminosity.hpp"
 #include "subimage_view.hpp"
 
@@ -70,7 +70,7 @@ namespace {
         );
         feedback_.show(const_view(delta), 2);
         // Score by the rms delta luminosity
-        return -rms_value(view(delta));
+        return rms_value(view(delta));
       }
     private:
       TransformGen transform_gen_;
@@ -103,7 +103,7 @@ frame_transform find_best_transform(
   luminosity_match_scorer<decltype(transform_maker), decltype(to_view)>
     scorer(transform_maker, from_view, to_view, feedback);
 
-  auto best_state = optimize(
+  auto best_state = find_minimum_on_graph(
     make_product_state_space(
       // x shift and scale
       linear_state_space<double>(-10, 10, start_params.x_shift, 1.0/4),
