@@ -2,6 +2,14 @@
 
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
+// workaround Boost.GIL bug https://svn.boost.org/trac/boost/ticket/3908
+// (should be fixed in 1.46)
+#ifndef png_infopp_NULL
+#define png_infopp_NULL NULL
+#endif
+#ifndef int_p_NULL
+#define int_p_NULL NULL
+#endif
 #include <boost/gil/extension/io/png_io.hpp>
 
 #include "fatal.hpp"
