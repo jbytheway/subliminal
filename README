@@ -5,7 +5,7 @@ Subliminal is an automatic subtitle extraction system.  It compares a raw video
 with one into which subtitles have been encoded and tries to extract those
 subtitles to facilitate soft-subbing.
 
-Copyright (C) 2010  John Bytheway <jbytheway at that gmail place>
+Copyright (C) 2010, 2011  John Bytheway <jbytheway at that gmail place>
 
 For building instructions see INSTALL.
 
@@ -22,8 +22,20 @@ Subliminal contains:
 - subliminal
   The program itself.
 
+- score
+  A very simple text-scoring program useful in postprocessing subliminal's
+  output.
+
+- test
+  Some test data.
+
+Note that subliminal only extracts images which it believes to be the
+subtitles.  If you need text subtitles you will need an OCR program too.  I
+recommend tesseract <http://code.google.com/p/tesseract-ocr/>.
+
 As yet there is no user documentation, but you can read subliminal's --help
-message and experiment with the test data.
+message and experiment with the test data.  In particular, test/Makefile
+demonstrates one way to postprocess subliminal's output.
 
 
 LICENSE
