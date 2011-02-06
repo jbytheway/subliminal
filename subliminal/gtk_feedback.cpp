@@ -68,13 +68,15 @@ struct gtk_feedback::impl {
       assert(images[4]);
       assert(images[5]);
       for (int i=0; i<num_images; ++i) {
-        pixbuf_show_signals[i].connect(
+        pixbuf_show_signals[i].reset(new Glib::Dispatcher());
+        connections.push_back(pixbuf_show_signals[i]->connect(
           sigc::bind(sigc::mem_fun(this, &ThreadObj::update_image), i)
-        );
+        ));
       }
-      end_signal.connect(
+      end_signal.reset(new Glib::Dispatcher());
+      connections.push_back(end_signal->connect(
         sigc::mem_fun(this, &ThreadObj::close_window)
-      );
+      ));
       initted = true;
       window->show();
       Gtk::Main::run();
@@ -94,7 +96,7 @@ struct gtk_feedback::impl {
         ffmsxx::video_dimensions(view.width(), view.height()),
         reinterpret_cast<uint8_t const*>(&*view.row_begin(1))-
           reinterpret_cast<uint8_t const*>(&*view.row_begin(0)),
-        pixbuf_show_signals[image]
+        *pixbuf_show_signals[image]
       );
     }
 
@@ -106,10 +108,18 @@ struct gtk_feedback::impl {
       /** \bug Maybe should use condition variable instead of spin-locking? */
       while (!initted) {}
       shutting_down = true;
-      end_signal();
+      (*end_signal)();
     }
 
     void close_window() {
+      while (!connections.empty()) {
+        connections.back().disconnect();
+        connections.pop_back();
+      }
+      for (int i=0; i<num_images; ++i) {
+        pixbuf_show_signals[i].reset();
+      }
+      end_signal.reset();
       Gtk::Main::quit();
     }
 
@@ -121,8 +131,11 @@ struct gtk_feedback::impl {
     Gtk::Window* window;
     Gtk::Image* images[num_images];
     prepixbuf pixbufs[num_images];
-    Glib::Dispatcher pixbuf_show_signals[num_images];
-    Glib::Dispatcher end_signal;
+    // Indirect through a scoped_ptr because they must be created on the GUI
+    // thread
+    boost::scoped_ptr<Glib::Dispatcher> pixbuf_show_signals[num_images];
+    boost::scoped_ptr<Glib::Dispatcher> end_signal;
+    std::vector<sigc::connection> connections;
   };
 
   std::ostream& out;
