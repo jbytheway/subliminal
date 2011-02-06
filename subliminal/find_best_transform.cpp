@@ -7,6 +7,7 @@
 #include "product_state_space.hpp"
 #include "optimize.hpp"
 #include "delta_luminosity.hpp"
+#include "subimage_view.hpp"
 
 namespace subliminal {
 
@@ -59,10 +60,14 @@ namespace {
         auto transf = transform_gen_(state);
         // Transform one image
         boost::gil::gray8_image_t transformed(ref_view_.dimensions());
-        transf(transformee_view_, view(transformed));
+        auto meaningful_area = transf(transformee_view_, view(transformed));
         // Compute the delta of the transformed and other image
-        boost::gil::gray8s_image_t delta(ref_view_.dimensions());
-        delta_luminosity(const_view(transformed), ref_view_, view(delta));
+        boost::gil::gray8s_image_t delta(meaningful_area.dimensions());
+        delta_luminosity(
+          subimage_view(const_view(transformed), meaningful_area),
+          subimage_view(ref_view_, meaningful_area),
+          view(delta)
+        );
         feedback_.show(const_view(delta), 2);
         // Score by the rms delta luminosity
         return -rms_value(view(delta));
