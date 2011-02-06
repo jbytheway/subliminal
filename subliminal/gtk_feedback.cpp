@@ -113,7 +113,7 @@ struct gtk_feedback::impl {
       Gtk::Main::quit();
     }
 
-    bool initted;
+    bool volatile initted;
     bool shutting_down;
     boost::filesystem::path data_path;
     std::ostream& out;
