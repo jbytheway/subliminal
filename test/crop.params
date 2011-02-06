@@ -1,0 +1,2 @@
+MENCODER_ARGS="-oac copy -ovc lavc -vf crop=312:232:3:5"
+
