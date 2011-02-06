@@ -7,7 +7,7 @@
 #include <ffmsxx/do_indexing.hpp>
 #include <ffmsxx/track_info.hpp>
 
-struct FFMS_Indexer;
+class FFMS_Indexer;
 
 namespace ffmsxx {
 
