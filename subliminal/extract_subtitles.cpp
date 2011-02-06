@@ -183,7 +183,7 @@ void extract_subtitles(
     // Jump to a frame ~5 seconds in (blah blah framerate blah blah)
     int const sub_frame_index =
       ( options.alignment_frame ?
-        *options.alignment_frame :std::min(25*5, subs.num_frames()/2) );
+        *options.alignment_frame : std::min(25*5, subs.num_frames()/2) );
     auto subs_frame = subs.frame(sub_frame_index);
     auto subs_time = subs_frame.time(subs_time_base);
     ffmsxx::video_frame const* raw_frame = NULL;
