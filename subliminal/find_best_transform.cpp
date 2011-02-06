@@ -2,10 +2,12 @@
 
 #include <boost/spirit/home/phoenix/object/construct.hpp>
 #include <boost/spirit/home/phoenix/core/argument.hpp>
+#include <boost/assign/list_of.hpp>
 
 #include "linear_state_space.hpp"
 #include "product_state_space.hpp"
 #include "find_minimum_on_graph.hpp"
+#include "find_minimum_gsl.hpp"
 #include "delta_luminosity.hpp"
 #include "subimage_view.hpp"
 
@@ -103,6 +105,8 @@ frame_transform find_best_transform(
   luminosity_match_scorer<decltype(transform_maker), decltype(to_view)>
     scorer(transform_maker, from_view, to_view, feedback);
 
+#if 0
+  // Search along co-ordinate axes; doesn't work very well
   auto best_state = find_minimum_on_graph(
     make_product_state_space(
       // x shift and scale
@@ -118,6 +122,22 @@ frame_transform find_best_transform(
     scorer,
     feedback
   );
+#else
+  // Search using a GSL multidimensional minimizer (specifically: Nelder-Mead
+  // Simplex algorithm)
+  auto best_state = find_minimum_gsl<6>(
+    boost::assign::list_of
+      (start_params.x_shift)
+      (start_params.x_scale)
+      (start_params.y_shift)
+      (start_params.y_scale)
+      (start_params.l_shift)
+      (start_params.l_scale),
+    boost::assign::list_of(8.0)(0.1)(8.0)(0.1)(8.0)(0.1),
+    scorer,
+    feedback
+  );
+#endif
 
   return frame_transform(from_view.dimensions(), best_state);
 }

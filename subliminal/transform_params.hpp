@@ -59,6 +59,7 @@ struct transform_params {
 };
 
 std::istream& operator>>(std::istream&, transform_params&);
+std::ostream& operator<<(std::ostream&, transform_params const&);
 
 }
 

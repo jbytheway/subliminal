@@ -7,7 +7,7 @@ $ git submodule update
 Next you will need some dependencies:
 
 - gcc >= 4.4 (this code uses recently added C++0x features so new gcc really is
-  needed; other compilers are unikely to cope in the near term)
+  needed; other compilers are unikely to cope in the near term).
 - ffmpegsource, a wrapper round ffmpeg to facilitate simple extraction of
   frames.  If it's not in your distro then see
   http://code.google.com/p/ffmpegsource/ .  It's certainly possible to use it
@@ -15,6 +15,7 @@ Next you will need some dependencies:
 - optimal, my options parsing library.  Read about it at
   http://github.com/jbytheway/optimal or clone it from
   git@github.com:jbytheway/optimal.git
+- A few other, easy to find, libraries.
 
 For me, ffmpegsource doesn't build a shared version of its library and libtool
 somehow fails to notice this and tries to link a shared library against the
