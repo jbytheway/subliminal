@@ -1,0 +1,7 @@
+{
+   ld stuff
+   Memcheck:Cond
+   fun:_dl_relocate_object
+   fun:dl_main
+}
+
