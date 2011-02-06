@@ -58,7 +58,7 @@ namespace {
         // Make the transformation function for this state
         auto transf = transform_gen_(state);
         // Transform one image
-        boost::gil::gray8_image_t transformed(transformee_view_.dimensions());
+        boost::gil::gray8_image_t transformed(ref_view_.dimensions());
         transf(transformee_view_, view(transformed));
         // Compute the delta of the transformed and other image
         boost::gil::gray8s_image_t delta(ref_view_.dimensions());
