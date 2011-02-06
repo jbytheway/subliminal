@@ -3,6 +3,7 @@ BASES := $(basename $(PARAMS))
 SUBBEDS := $(addsuffix .subbed,$(BASES))
 OUTS := $(addsuffix .out,$(BASES))
 FINALS := $(addsuffix .final,$(BASES))
+CHECKS := $(addsuffix .check,$(BASES))
 
 PNGS := $(wildcard *.png)
 PNG_BASES := $(basename $(PNGS))
@@ -12,7 +13,7 @@ TXTS := $(addsuffix .txt,$(PNG_BASES))
 SCORE := ../score/score
 SUBLIMINAL := ../subliminal/subliminal
 
-test-nonrecursive: $(FINALS)
+test-nonrecursive: $(CHECKS)
 
 # Step 1: Use mplayer/mencoder to hardsub the video
 
@@ -67,7 +68,14 @@ $(FINALS): %.final: %.out forward-txts \
 	$(SCORE) character-frequencies pick_best_ocr.awk
 	<$< gawk -f pick_best_ocr.awk -v scorer="$(SCORE) character-frequencies" >$@
 
+# Step 7: Compare each .final file with its reference version to check that the
+# output is correct.
+
+$(CHECKS): %.check: %.ref %.final
+	diff $^
+	touch $@
+
 clean:
-	rm -f *.subbed *.out *.final *.png *.tif *.txt
+	rm -f *.subbed *.out *.final *.png *.tif *.txt *.check
 	rm -f unsubbed_video.avi subbed_video.avi
 

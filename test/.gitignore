@@ -4,5 +4,6 @@
 *.png
 *.tif
 *.txt
+*.check
 /subbed_video.avi*
 /unsubbed_video.avi*
