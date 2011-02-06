@@ -3,10 +3,12 @@ BASES := $(basename $(PARAMS))
 SUBBEDS := $(addsuffix .subbed,$(BASES))
 OUTS := $(addsuffix .out,$(BASES))
 
+SUBLIMINAL := ../subliminal/subliminal
+
 test-nonrecursive: $(OUTS)
 
-$(OUTS): %.out: %.subbed unsubbed_video.avi ../subliminal
-	../subliminal --quiet --raw unsubbed_video.avi --subs $< --output $@
+$(OUTS): %.out: %.subbed unsubbed_video.avi $(SUBLIMINAL)
+	$(SUBLIMINAL) --quiet --raw unsubbed_video.avi --subs $< --output $@
 
 $(SUBBEDS): %.subbed: %.params subbed_video.avi transcode.sh
 	./transcode.sh $<

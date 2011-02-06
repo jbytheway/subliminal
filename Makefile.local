@@ -1,6 +1,8 @@
-SUBDIRS := ffmsxx subliminal score
+SUBDIRS := ffmsxx subliminal score test
 
 all-recurse-subliminal: all-recurse-ffmsxx
 
 test-recurse-subliminal: test-recurse-ffmsxx
+
+test-recurse-test: test-recurse-subliminal test-recurse-score
 

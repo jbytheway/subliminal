@@ -1,4 +1,3 @@
-SUBDIRS = test
 BIN := subliminal
 THIS_CPPFLAGS := `pkg-config --cflags libglademm-2.4`
 LIB_DEP_NAMES := ffmsxx
