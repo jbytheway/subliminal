@@ -42,7 +42,7 @@ struct gtk_feedback::impl {
     {}
 
     void operator()() {
-      /** \bug Don't pass command line args through to here */
+      /** \bug Should we pass command line args through to here? */
       int argc = 0;
       char* args[] = { NULL };
       char** argv = args;
