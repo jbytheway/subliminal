@@ -28,6 +28,8 @@ void delta_luminosity(
   OutView const& out
 )
 {
+  assert(in1.dimensions() == in2.dimensions());
+  assert(out.dimensions() == in1.dimensions());
   boost::gil::transform_pixels(in1, in2, out, half_difference_luminosity());
 }
 
