@@ -49,5 +49,5 @@ tests with
 
 $ make test
 
-(Right now this is quick, but it may get quite slow in the future)
+WARNING: Running the tests will use several hundred MB of disk space.
 
