@@ -26,11 +26,13 @@ You may need to add some things to user.mk, e.g. to get the right g++ version
 or allow it to find optimal if you don't install it (which you shouldn't need
 to.  Here for example is my user.mk:
 
-  CXX = g++-4.4.1
+  CXX = g++-4.4.5
   BUILD_LIBTOOLFLAGS += --tag=disable-shared
-  BUILD_CPPFLAGS += -I$(top_srcdir)../optimal \
+  BUILD_CPPFLAGS += \
+    -I$(top_srcdir)../optimal \
     -I$(HOME)/src/ffmpegsource/include
-  BUILD_LDFLAGS += -L$(top_srcdir)../optimal/optimal \
+  BUILD_LDFLAGS += \
+    -L$(top_srcdir)../optimal/optimal \
     -L$(HOME)/src/ffmpegsource/src/core
 
 See makeshift/INSTALL for details of what goes in user.mk.
@@ -38,6 +40,9 @@ See makeshift/INSTALL for details of what goes in user.mk.
 Then to get a debug version it should be simply
 
 $ make
+
+Optimisation is turned on by default, otherwise the program is hopelessly
+slow.  If you really want to you can turn it off in user.mk.
 
 If you have mencoder then you can run a few tests with
 
