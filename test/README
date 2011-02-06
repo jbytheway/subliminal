@@ -8,6 +8,12 @@ The original video from which the test data is generated (root_video.avi) is a
 speedrun of StarCraft Protoss level 7 (Homeland) in 1:11 by Philip 'ballofsnow'
 Cornell from 2005-09-16.  See http://speeddemosarchive.com/Starcraft.html.
 
+The character-frequencies used for scoring was produced by running
+
+locate README | grep usr/share | xargs file | grep --text ASCII | \
+  cut -d : -f 1 | xargs cat | sed 's/./&\n/g' | sort | uniq -c | \
+  grep ' [ -~]$' | sed -r 's/ *([0-9]*) (.)/\2 \1'
+
 Each test is defined by a .params file which specifies the options to use when
 transcoding it.
 

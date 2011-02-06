@@ -2,16 +2,19 @@ PARAMS := $(wildcard *.params)
 BASES := $(basename $(PARAMS))
 SUBBEDS := $(addsuffix .subbed,$(BASES))
 OUTS := $(addsuffix .out,$(BASES))
+FINALS := $(addsuffix .final,$(BASES))
 
+PNGS := $(wildcard *.png)
+PNG_BASES := $(basename $(PNGS))
+TIFS := $(addsuffix .tif,$(PNG_BASES))
+TXTS := $(addsuffix .txt,$(PNG_BASES))
+
+SCORE := ../score/score
 SUBLIMINAL := ../subliminal/subliminal
 
-test-nonrecursive: $(OUTS)
+test-nonrecursive: $(FINALS)
 
-$(OUTS): %.out: %.subbed unsubbed_video.avi $(SUBLIMINAL)
-	$(SUBLIMINAL) --quiet --raw unsubbed_video.avi --subs $< --output $@
-
-$(SUBBEDS): %.subbed: %.params subbed_video.avi transcode.sh
-	./transcode.sh $<
+# Step 1: Use mplayer/mencoder to hardsub the video
 
 # Mencoder doesn't support ass, so in order to hardsub we use mplayer with -vo
 # yuv4mpeg.  Unfortunately that messes up frame timings so we need to do the
@@ -27,6 +30,44 @@ unsubbed_video.avi: root_video.avi subs.ass
 	mplayer -benchmark -vo yuv4mpeg:file="$@.mpeg" "$<"
 	mencoder -nosound -ovc lavc -o "$@" "$@.mpeg"
 
+# Step 2: Mess with the subtitled video in a variety of different ways
+# according to the respective params files
+
+$(SUBBEDS): %.subbed: %.params subbed_video.avi transcode.sh
+	./transcode.sh $<
+
+# Step 3: Run subliminal on the messed-with videos comparing against the
+# un-messed-with, unsubbed version.  This produces a bunch of pngs and a .out
+# file which gives timing info for them.
+
+$(OUTS): %.out: %.subbed unsubbed_video.avi $(SUBLIMINAL)
+	$(SUBLIMINAL) --quiet --raw unsubbed_video.avi --subs $< --output $@
+
+# Step 4: Convert all those pngs to uncompressed tifs, as required by
+# tesseract.  Also need to resample them up to 640x480 otherwise the text isn't
+# big enough for tesseract to notice (*sigh*)
+
+$(TIFS): %.tif: %.png
+	convert $< -compress none -sample 640x480 $@
+
+# Step 5: OCR all the tifs with tesseract
+
+txts: $(TXTS)
+
+forward-txts: $(OUTS)
+	$(MAKE) txts
+
+$(TXTS): %.txt: %.tif
+	tesseract $< $*
+
+# Step 6: Score all the OCRs and pick the best scoring one for each sub,
+# merging all the results into a .final file
+
+$(FINALS): %.final: %.out forward-txts \
+	$(SCORE) character-frequencies pick_best_ocr.awk
+	<$< gawk -f pick_best_ocr.awk -v scorer="$(SCORE) character-frequencies" >$@
+
 clean:
-	rm -f *.subbed *.out unsubbed_video.avi subbed_video.avi
+	rm -f *.subbed *.out *.final *.png *.tif *.txt
+	rm -f unsubbed_video.avi subbed_video.avi
 

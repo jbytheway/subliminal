@@ -1,5 +1,8 @@
 *.subbed
 *.out
+*.final
 *.png
+*.tif
+*.txt
 /subbed_video.avi*
 /unsubbed_video.avi*
