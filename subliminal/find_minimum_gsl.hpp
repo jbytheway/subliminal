@@ -15,6 +15,7 @@ template<size_t N, typename Range1, typename Range2, typename Scorer>
 typename n_vector<double, N>::type find_minimum_gsl(
   Range1 const& startRange,
   Range2 const& stepRange,
+  double const precision,
   Scorer const& scorer,
   visual_feedback& feedback
 )
@@ -68,7 +69,7 @@ typename n_vector<double, N>::type find_minimum_gsl(
     assert(!status);
     double const characteristic_size =
       gsl_multimin_fminimizer_size(&*minimizer);
-    status = gsl_multimin_test_size(characteristic_size, 0.1);
+    status = gsl_multimin_test_size(characteristic_size, precision);
   } while (status == GSL_CONTINUE);
 
   // Turn the resulting gsl_vector back into a fusion::vector
