@@ -125,7 +125,7 @@ frame_transform find_best_transform(
 #else
   // Search using a GSL multidimensional minimizer (specifically: Nelder-Mead
   // Simplex algorithm)
-  auto best_state = find_minimum_gsl<6>(
+  auto best_state = find_minimum_gsl<transform_params>(
     boost::assign::list_of
       (start_params.x_shift)
       (start_params.x_scale)

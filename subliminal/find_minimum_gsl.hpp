@@ -7,12 +7,10 @@
 
 #include <gsl/gsl_multimin.h>
 
-#include "n_vector.hpp"
-
 namespace subliminal {
 
-template<size_t N, typename Range1, typename Range2, typename Scorer>
-typename n_vector<double, N>::type find_minimum_gsl(
+template<typename StateType, typename Range1, typename Range2, typename Scorer>
+StateType find_minimum_gsl(
   Range1 const& startRange,
   Range2 const& stepRange,
   double const precision,
@@ -20,8 +18,9 @@ typename n_vector<double, N>::type find_minimum_gsl(
   visual_feedback& feedback
 )
 {
-  assert(boost::size(startRange) == N);
-  assert(boost::size(stepRange) == N);
+  const size_t N = boost::fusion::result_of::size<StateType>::type::value;
+  assert(boost::size(startRange) == ptrdiff_t(N));
+  assert(boost::size(stepRange) == ptrdiff_t(N));
   std::shared_ptr<gsl_multimin_fminimizer> minimizer(
     gsl_multimin_fminimizer_alloc(gsl_multimin_fminimizer_nmsimplex2, N),
     gsl_multimin_fminimizer_free
@@ -35,8 +34,10 @@ typename n_vector<double, N>::type find_minimum_gsl(
     static double f(const gsl_vector* x, void* params) {
       Scorer const& scorer = static_cast<FParams*>(params)->sc;
       visual_feedback& feedback = static_cast<FParams*>(params)->fb;
-      BOOST_MPL_ASSERT_RELATION(N,==,6);
-      transform_params const p(
+      BOOST_MPL_ASSERT_RELATION(
+        boost::fusion::result_of::size<StateType>::type::value,==,6
+      );
+      StateType const p(
         gsl_vector_get(x, 0),
         gsl_vector_get(x, 1),
         gsl_vector_get(x, 2),
@@ -74,9 +75,8 @@ typename n_vector<double, N>::type find_minimum_gsl(
 
   // Turn the resulting gsl_vector back into a fusion::vector
   auto const x = gsl_multimin_fminimizer_x(&*minimizer);
-  typedef typename n_vector<double, N>::type Result;
   BOOST_MPL_ASSERT_RELATION(N,==,6);
-  return Result(
+  return StateType(
     gsl_vector_get(x, 0),
     gsl_vector_get(x, 1),
     gsl_vector_get(x, 2),
