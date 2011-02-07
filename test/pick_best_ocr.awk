@@ -14,8 +14,6 @@
     command="< "best_file" tr '\n' ' ' | tr '\\{}' ___";
     command | getline line;
     close(command);
-    start_time = "0:"int($$1/60)":"$$1%60;
-    end_time = "0:"int($$2/60)":"$$2%60;
-    printf("%s %s %s\n", start_time, end_time, line);
+    printf("%s %s %s\n", $1, $2, line);
   }
 }
