@@ -4,10 +4,37 @@
 #include <array>
 
 #include <boost/range/algorithm/copy.hpp>
+#include <boost/mpl/range_c.hpp>
+#include <boost/fusion/include/for_each.hpp>
 
 #include <gsl/gsl_multimin.h>
 
 namespace subliminal {
+
+namespace gsl_detail {
+
+  template<typename Sequence>
+  struct assign_to {
+    Sequence& sequence;
+    gsl_vector const* const vector;
+
+    template<typename I>
+    void operator()(I const) const {
+      boost::fusion::at<I>(sequence) = gsl_vector_get(vector, I());
+    }
+  };
+
+  template<typename Sequence>
+  Sequence make_from_gsl_vector(gsl_vector const* x) {
+    size_t const N = boost::fusion::result_of::size<Sequence>::type::value;
+    Sequence result;
+    boost::fusion::for_each(
+      boost::mpl::range_c<size_t, 0, N>(), assign_to<Sequence>{result, x}
+    );
+    return result;
+  }
+
+}
 
 template<typename StateType, typename Range1, typename Range2, typename Scorer>
 StateType find_minimum_gsl(
@@ -34,17 +61,7 @@ StateType find_minimum_gsl(
     static double f(const gsl_vector* x, void* params) {
       Scorer const& scorer = static_cast<FParams*>(params)->sc;
       visual_feedback& feedback = static_cast<FParams*>(params)->fb;
-      BOOST_MPL_ASSERT_RELATION(
-        boost::fusion::result_of::size<StateType>::type::value,==,6
-      );
-      StateType const p(
-        gsl_vector_get(x, 0),
-        gsl_vector_get(x, 1),
-        gsl_vector_get(x, 2),
-        gsl_vector_get(x, 3),
-        gsl_vector_get(x, 4),
-        gsl_vector_get(x, 5)
-      );
+      auto const p = gsl_detail::make_from_gsl_vector<StateType>(x);
       double const score = scorer(p);
       feedback.messagef(boost::format("score(%1%)=%2%") % p % score);
       return score;
@@ -75,15 +92,7 @@ StateType find_minimum_gsl(
 
   // Turn the resulting gsl_vector back into a fusion::vector
   auto const x = gsl_multimin_fminimizer_x(&*minimizer);
-  BOOST_MPL_ASSERT_RELATION(N,==,6);
-  return StateType(
-    gsl_vector_get(x, 0),
-    gsl_vector_get(x, 1),
-    gsl_vector_get(x, 2),
-    gsl_vector_get(x, 3),
-    gsl_vector_get(x, 4),
-    gsl_vector_get(x, 5)
-  );
+  return gsl_detail::make_from_gsl_vector<StateType>(x);
 }
 
 }
