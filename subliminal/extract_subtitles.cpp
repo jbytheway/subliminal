@@ -304,7 +304,8 @@ void extract_subtitles(
       if (!options.quiet) {
         feedback.messagef(boost::format("Got %1% chunks") % chunks.size());
       }
-      if (chunks.size() > 5) {
+      /** \todo Expose this parameter on the command line */
+      if (chunks.size() > 10) {
         feedback.message("implausibly many chunks; writing frame off");
         continue;
       }
