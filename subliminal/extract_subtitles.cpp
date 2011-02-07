@@ -158,9 +158,9 @@ void extract_subtitles(
   }
 
   // We want both sources producing video at the same resolution and pixel
-  // format.
-  // For resolution we mimic the subs since they're what we're extracting
-  // images from later, and don't want to lose quality there.
+  // format.  *However*, we won't use ffmsxx's resizer (even though it's
+  // probably better than ours) because we want more control than it offers.
+  //
   // For pixel format we go with RGB, 8 bits each, because that's easy to
   // understand and work with.
   //
@@ -177,17 +177,14 @@ void extract_subtitles(
     SUBLIMINAL_FATAL("dimensions of raw video must be multiples of 8");
   }
 
-  boost::format f("Transforming both videos to %dx%d");
-  f % subs_dims.width() % subs_dims.height();
-  feedback.message(f.str());
   ffmsxx::pixel_formats const formats(ffmsxx::pixel_format("rgb24"));
 
-  raw.set_output_format(formats, subs_dims, ffmsxx::resizer::bicubic);
+  raw.set_output_format(formats, raw_dims, ffmsxx::resizer::bicubic);
   subs.set_output_format(formats, subs_dims, ffmsxx::resizer::bicubic);
 
   auto subs_time_base = subs.time_base();
 
-  std::unique_ptr<frame_transform> best_transform;
+  boost::optional<frame_transform> best_transform;
   {
     // Step 1: Determine the appropriate affine transformation to make the raw
     // frames line up with the subbed ones; will be stored in best_transform
@@ -207,9 +204,9 @@ void extract_subtitles(
       SUBLIMINAL_FATAL("videos seem to be of wildly different lengths");
     }
 
-    best_transform.reset(new frame_transform(find_best_transform(
-          *raw_frame, subs_frame, options.start_params, feedback
-        )));
+    best_transform = find_best_transform(
+      *raw_frame, subs_frame, options.start_params, feedback
+    );
   }
 
   assert(best_transform);
@@ -256,28 +253,34 @@ void extract_subtitles(
       auto raw_view = make_gil_view(*raw_frame);
       auto subs_view = make_gil_view(subs_frame);
 
-      auto dims = raw_view.dimensions();
-      assert(dims == subs_view.dimensions());
+      auto dims = subs_view.dimensions();
 
       // Apply chosen best transform to raw
       boost::gil::gray8_image_t transformed(dims);
-      (*best_transform)(raw_view, view(transformed));
+      auto meaningful_area = (*best_transform)(raw_view, view(transformed));
+
+      // Take views of the two images within the meaningful area of the
+      // transformation
+      auto subview_dims = meaningful_area.dimensions();
+      auto subs_subview = subimage_view(subs_view, meaningful_area);
+      auto raw_subview =
+        subimage_view(const_view(transformed), meaningful_area);
 
       // Copmute the delta of the two images
-      boost::gil::gray8s_image_t delta(dims);
-      delta_luminosity(const_view(transformed), subs_view, view(delta));
+      boost::gil::gray8s_image_t delta(subview_dims);
+      delta_luminosity(raw_subview, subs_subview, view(delta));
 
       // Show the delta in slot 3
       feedback.show(const_view(delta), 2);
 
       // Pull the extreme values from the delta
-      boost::gil::gray8_image_t extreme_values(dims);
+      boost::gil::gray8_image_t extreme_values(subview_dims);
       transform_pixels(
         const_view(delta), view(extreme_values), get_extreme_values(32)
       );
 
       // Flood fill the outside
-      boost::gil::gray8_image_t outside_fill(dims);
+      boost::gil::gray8_image_t outside_fill(subview_dims);
       fill_pixels(view(outside_fill), 0);
       flood_fill(const_view(extreme_values), view(outside_fill));
 
@@ -286,7 +289,9 @@ void extract_subtitles(
 
       // Delete isolated pixels
       for_each_pixel_position(
-        subimage_view(view(outside_fill), 1, 1, dims.x-2, dims.y-2),
+        subimage_view(
+          view(outside_fill), 1, 1, subview_dims.x-2, subview_dims.y-2
+        ),
         delete_if_isolated()
       );
 
@@ -305,7 +310,7 @@ void extract_subtitles(
 
       bool bad = false;
       BOOST_FOREACH(auto const& chunk, chunks) {
-        if (non_black_height(const_view(chunk)) > size_t(dims.y)/5) {
+        if (non_black_height(const_view(chunk)) > size_t(subview_dims.y)/5) {
           feedback.message("implausibly high chunk; writing frame off");
           bad = true;
           break;
@@ -319,7 +324,7 @@ void extract_subtitles(
         feedback.show(const_view(chunk), 4);
 
         // Extract this chunk from the subbed copy
-        boost::gil::rgb8_image_t sub_chunk(dims);
+        boost::gil::rgb8_image_t sub_chunk(subview_dims);
         copy_under_mask(subs_view, const_view(chunk), view(sub_chunk));
 
         feedback.show(const_view(sub_chunk), 5);
