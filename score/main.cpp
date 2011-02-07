@@ -58,8 +58,14 @@ int main(int argc, char const* const* const argv)
   // Now read the input, and score it
   char c;
   double score = 0.0;
+  uint64_t num_chars = 0;
   while (std::cin.get(c)) {
     score += scores[std::uint8_t(c)];
+    ++num_chars;
+  }
+
+  if (num_chars != 0) {
+    score /= num_chars;
   }
 
   std::cout << score << std::endl;
