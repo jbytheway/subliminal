@@ -5,9 +5,13 @@
 
 namespace subliminal {
 
+typedef boost::fusion::result_of::as_vector<
+  transform_params
+>::type vector_type;
+
 std::istream& operator>>(std::istream& i, transform_params& p)
 {
-  boost::fusion::vector<double, double, double, double, double, double> v;
+  vector_type v;
   if (i >> v) {
     p = transform_params(v);
   }
@@ -16,7 +20,7 @@ std::istream& operator>>(std::istream& i, transform_params& p)
 
 std::ostream& operator<<(std::ostream& o, transform_params const& p)
 {
-  boost::fusion::vector<double, double, double, double, double, double> v(p);
+  vector_type v(p);
   o << v;
   return o;
 }
