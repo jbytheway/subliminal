@@ -140,6 +140,8 @@ frame_transform find_best_transform(
   );
 #endif
 
+  feedback.messagef(boost::format("Final params: %s\n") % best_state);
+
   return frame_transform(from_view.dimensions(), best_state);
 }
 
