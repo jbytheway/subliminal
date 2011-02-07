@@ -118,6 +118,7 @@ namespace {
     Out const& out
   )
   {
+    assert(in.dimensions() == out.dimensions());
     transform_pixels(in, mask, out, copy_if());
   }
 
@@ -325,7 +326,7 @@ void extract_subtitles(
 
         // Extract this chunk from the subbed copy
         boost::gil::rgb8_image_t sub_chunk(subview_dims);
-        copy_under_mask(subs_view, const_view(chunk), view(sub_chunk));
+        copy_under_mask(subs_subview, const_view(chunk), view(sub_chunk));
 
         feedback.show(const_view(sub_chunk), 5);
 
