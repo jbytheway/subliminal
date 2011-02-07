@@ -16,9 +16,7 @@ std::istream& operator>>(std::istream& i, transform_params& p)
 
 std::ostream& operator<<(std::ostream& o, transform_params const& p)
 {
-  boost::fusion::vector<double, double, double, double, double, double> v(
-    p.x_shift, p.x_scale, p.y_shift, p.y_scale, p.l_shift, p.l_scale
-  );
+  boost::fusion::vector<double, double, double, double, double, double> v(p);
   o << v;
   return o;
 }

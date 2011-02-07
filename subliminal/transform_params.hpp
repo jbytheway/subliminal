@@ -8,6 +8,8 @@
 #include <boost/fusion/include/at.hpp>
 #include <boost/fusion/include/size.hpp>
 
+#include "adapt_struct.hpp"
+
 namespace subliminal {
 
 struct transform_params {
@@ -62,6 +64,16 @@ std::istream& operator>>(std::istream&, transform_params&);
 std::ostream& operator<<(std::ostream&, transform_params const&);
 
 }
+
+SUBLIMINAL_ADAPT_STRUCT(
+  subliminal::transform_params,
+  (x_shift)
+  (x_scale)
+  (y_shift)
+  (y_scale)
+  (l_shift)
+  (l_scale)
+)
 
 #endif // SUBLIMINAL__TRANSFORM_PARAMS
 
