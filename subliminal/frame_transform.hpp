@@ -52,7 +52,7 @@ class frame_transform {
       rectangle<ptrdiff_t> meaningful_area(top_left, bottom_right);
       for_each_pixel(
         subimage_view(out, meaningful_area),
-        adjust_brightness_contrast(l_shift_, l_scale_)
+        adjust_brightness_contrast(l_shift_, real_l_scale_)
       );
       return meaningful_area;
     }
@@ -63,14 +63,14 @@ class frame_transform {
       double y_shift, double y_scale,
       double l_shift, double l_scale
     ) {
-      assert(x_scale);
-      assert(y_scale);
+      double const real_x_scale = (dims.x + x_scale)/dims.x;
+      double const real_y_scale = (dims.y + y_scale)/dims.y;
       matrix_ =
         boost::gil::matrix3x2<double>::get_translate(
           boost::gil::point2<double>(-dims.x/2+x_shift, -dims.y/2+y_shift)
         ) *
         boost::gil::matrix3x2<double>::get_scale(
-          boost::gil::point2<double>(x_scale, y_scale)
+          boost::gil::point2<double>(real_x_scale, real_y_scale)
         ) *
         boost::gil::matrix3x2<double>::get_translate(
           boost::gil::point2<double>(dims.x/2, dims.y/2)
@@ -80,19 +80,19 @@ class frame_transform {
           boost::gil::point2<double>(-dims.x/2, -dims.y/2)
         ) *
         boost::gil::matrix3x2<double>::get_scale(
-          boost::gil::point2<double>(1.0/x_scale, 1.0/y_scale)
+          boost::gil::point2<double>(1.0/real_x_scale, 1.0/real_y_scale)
         ) *
         boost::gil::matrix3x2<double>::get_translate(
           boost::gil::point2<double>(dims.x/2-x_shift, dims.y/2-y_shift)
         );
       l_shift_ = l_shift;
-      l_scale_ = l_scale;
+      real_l_scale_ = (256+l_scale)/256;
     }
 
     boost::gil::matrix3x2<double> matrix_;
     boost::gil::matrix3x2<double> inverse_matrix_;
     double l_shift_;
-    double l_scale_;
+    double real_l_scale_;
 };
 
 }

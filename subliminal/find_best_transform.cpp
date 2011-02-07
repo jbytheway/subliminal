@@ -133,7 +133,7 @@ frame_transform find_best_transform(
       (start_params.y_scale)
       (start_params.l_shift)
       (start_params.l_scale),
-    boost::assign::list_of(8.0)(0.1)(8.0)(0.1)(8.0)(0.1),
+    boost::assign::list_of(8.0)(8.0)(8.0)(8.0)(8.0)(8.0),
     0.1, // this tells it how precisely we want to know the answer
     scorer,
     feedback
