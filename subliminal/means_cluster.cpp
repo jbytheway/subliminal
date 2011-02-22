@@ -26,8 +26,10 @@ means_cluster(std::vector<Point<float>> const& data, size_t const num)
   Pts old_means;
   typedef std::mt19937 Engine;
   Engine engine;
-  typedef std::variate_generator<Engine*, std::uniform_int<size_t>> Rng;
-  Rng rng(&engine, std::uniform_int<size_t>(0, data.size()));
+  typedef std::uniform_int_distribution<size_t> Distribution;
+  Distribution dist(0, data.size());
+
+  auto rng = [&]() { return dist(engine); };
 
   size_t trials = 0;
   while (old_means.size() < num && trials < num*3) {

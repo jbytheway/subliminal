@@ -341,7 +341,7 @@ void extract_subtitles(
         for (auto it = active_conglomerates.begin();
           it != active_conglomerates.end(); ++it) {
           if ((*it)->consistent_overlap(const_view(sub_chunk))) {
-            new_conglomerate->merge(*std::move(*it));
+            new_conglomerate->merge(std::move(**it));
             to_erase.push_back(it);
           }
         }

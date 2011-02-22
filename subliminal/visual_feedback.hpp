@@ -35,7 +35,7 @@ class visual_feedback : boost::noncopyable {
       show_rgb(const_view(copy), image);
     }
   protected:
-    visual_feedback() = default;
+    visual_feedback() {};
 };
 
 }
