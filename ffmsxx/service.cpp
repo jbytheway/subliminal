@@ -14,8 +14,8 @@ service::service()
   /** \bug Not thread-safe */
   assert(!extant);
   extant = true;
-  /** \todo CPU flags? */
-  FFMS_Init(0);
+
+  FFMS_Init(0 /** \todo CPU flags? */, 1 /** \todo UTF-8 paths? */);
 }
 
 service::~service()
