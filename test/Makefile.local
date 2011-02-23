@@ -24,11 +24,13 @@ test-nonrecursive: $(CHECKS)
 # coped with desync properly, but it doesn't yet.
 
 subbed_video.avi: root_video.avi subs.ass
-	mplayer -benchmark -ass -sub subs.ass -vo yuv4mpeg:file="$@.mpeg" "$<"
+	mplayer -nosound -benchmark -ass -sub subs.ass \
+		-vo yuv4mpeg:file="$@.mpeg" "$<"
 	mencoder -nosound -ovc lavc -o "$@" "$@.mpeg"
 
 unsubbed_video.avi: root_video.avi subs.ass
-	mplayer -benchmark -vo yuv4mpeg:file="$@.mpeg" "$<"
+	mplayer -nosound -benchmark \
+		-vo yuv4mpeg:file="$@.mpeg" "$<"
 	mencoder -nosound -ovc lavc -o "$@" "$@.mpeg"
 
 # Step 2: Mess with the subtitled video in a variety of different ways
