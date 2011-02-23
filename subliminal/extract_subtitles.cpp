@@ -12,6 +12,7 @@
 #include <boost/spirit/home/phoenix/core/argument.hpp>
 #include <boost/spirit/home/phoenix/operator.hpp>
 #include <boost/fusion/include/tuple.hpp>
+#include <boost/range/algorithm/sort.hpp>
 
 #include <ffmsxx/video_source.hpp>
 #include <ffmsxx/video_dimensions.hpp>
@@ -331,8 +332,7 @@ void extract_subtitles(
 
         feedback.show(const_view(sub_chunk), 5);
 
-        /** \bug Should be unique_ptr, but gcc libstdc++ not good enough yet */
-        std::shared_ptr<conglomerate_image> new_conglomerate(
+        Conglomerates::value_type new_conglomerate(
           new conglomerate_image(
             sub_frame_index, subs_time, const_view(sub_chunk)
           )
@@ -353,9 +353,17 @@ void extract_subtitles(
       }
 
       // Conglomerates that have lost their activity indicate finished
-      // subtitles
+      // subtitles.  We finalize them, but first we sort them so that the
+      // output is more deterministic.
+      std::vector<std::pair<size_t, Conglomerates::value_type>>
+        finished_conglomerates;
       BOOST_FOREACH(auto const& conglomerate, active_conglomerates) {
-        conglomerate->finalize(sub_frame_index, subs_time, out);
+        auto const index = conglomerate->index_of_first_nonempty();
+        finished_conglomerates.push_back({index, std::move(conglomerate)});
+      }
+      boost::range::sort(finished_conglomerates);
+      BOOST_FOREACH(auto const& conglomerate, finished_conglomerates) {
+        conglomerate.second->finalize(sub_frame_index, subs_time, out);
       }
 
       active_conglomerates = std::move(new_conglomerates);

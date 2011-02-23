@@ -158,6 +158,15 @@ void conglomerate_image::merge(conglomerate_image&& other)
   );
 }
 
+size_t conglomerate_image::index_of_first_nonempty() const
+{
+  auto const it = std::find_if(
+    pixels_.begin(), pixels_.end(),
+    !px::bind(&conglomerate_pixel::empty, arg1)
+  );
+  return it - pixels_.begin();
+}
+
 void conglomerate_image::finalize(
   int frame,
   boost::rational<int64_t> const& time,

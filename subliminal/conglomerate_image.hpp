@@ -20,6 +20,8 @@ class conglomerate_image {
 
     void merge(conglomerate_image&&);
 
+    size_t index_of_first_nonempty() const;
+
     void finalize(
       int frame,
       boost::rational<int64_t> const& time,
