@@ -169,12 +169,12 @@ void extract_subtitles(
   // ffmpegsource tends to throw a wobbly; could work around it, but too lazy.
 
   auto const subs_dims = subs.encoded_dimensions();
-  if (subs_dims.width() % 8 != 0 || subs_dims.height() % 8 != 0) {
+  if (subs_dims.width() % 4 != 0 || subs_dims.height() % 4 != 0) {
     SUBLIMINAL_FATAL("dimensions of subtitled video must be multiples of 8");
   }
 
   auto const raw_dims = raw.encoded_dimensions();
-  if (raw_dims.width() % 8 != 0 || raw_dims.height() % 8 != 0) {
+  if (raw_dims.width() % 4 != 0 || raw_dims.height() % 4 != 0) {
     SUBLIMINAL_FATAL("dimensions of raw video must be multiples of 8");
   }
 
