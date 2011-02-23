@@ -46,9 +46,5 @@ Optimisation is turned on by default, otherwise the program is hopelessly
 slow.  If you really want to you can turn it off in user.mk.
 
 If you have mplayer, mencoder, convert, and tesseract then you can run a few
-tests with
-
-$ make test
-
-WARNING: Running the tests will use several hundred MB of disk space.
+tests.  See test/README for more details.
 

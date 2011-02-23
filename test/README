@@ -4,6 +4,23 @@ Subliminal Tests
 The test data is generated on the fly with mencoder (so you'll need mencoder to
 run these tests).
 
+You can run most of the tests with
+
+$ make test
+
+WARNING: Running the tests will use several hundred MB of disk space.
+
+However, this merely extracts and OCRs subs from the test videos.  The output
+is not reliable enough to verify automatically.  When the tests are complete
+you can run
+
+$ make compare
+
+This will diff each output against the corresponding reference output.  If they
+look mostly similar (just a few letters substituted by similar ones) then it's
+probably doing the right thing.  If you see lots of garbage then something has
+gone wrong.
+
 The original video from which the test data is generated (root_video.avi) is a
 speedrun of StarCraft Protoss level 7 (Homeland) in 1:11 by Philip 'ballofsnow'
 Cornell from 2005-09-16.  See http://speeddemosarchive.com/Starcraft.html.

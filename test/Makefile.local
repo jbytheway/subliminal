@@ -13,7 +13,7 @@ TXTS := $(addsuffix .txt,$(PNG_BASES))
 SCORE := ../score/score
 SUBLIMINAL := ../subliminal/subliminal
 
-test-nonrecursive: $(CHECKS)
+test-nonrecursive: $(FINALS)
 
 # Step 1: Use mplayer/mencoder to hardsub the video
 
@@ -74,9 +74,11 @@ $(FINALS): %.final: %.out forward-txts \
 # Step 7: Compare each .final file with its reference version to check that the
 # output is correct.
 
-$(CHECKS): %.check: %.ref %.final
-	diff $^
-	touch $@
+compare: $(CHECKS)
+.PHONY: $(CHECKS)
+
+$(CHECKS): %.check:
+	-diff $*.ref $*.final
 
 clean:
 	rm -f *.subbed *.out *.final *.png *.tif *.txt *.check
