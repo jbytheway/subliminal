@@ -1,6 +1,8 @@
 #ifndef SUBLIMINAL__ADJUST_BRIGHTNESS_CONTRAST_HPP
 #define SUBLIMINAL__ADJUST_BRIGHTNESS_CONTRAST_HPP
 
+#include <cmath>
+
 #include "clamp.hpp"
 
 namespace subliminal {
