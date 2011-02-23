@@ -1,0 +1,2 @@
+INSTALL_SHARE = $(wildcard *.glade)
+INSTALL_SUBDIR = subliminal
