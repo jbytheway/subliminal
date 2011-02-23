@@ -17,6 +17,8 @@
 #include "fatal.hpp"
 #include "transform_params.hpp"
 
+#define DATA_PATH SUBLIMINAL_PREFIX"/subliminal"
+
 namespace {
 
   struct Options {
@@ -74,6 +76,8 @@ namespace {
 "                   each capital variable is a floating point value,\n"
 "                   X and Y are for spatial coordinates, L is luminosity,\n"
 "                   P is a quantity added, and T a scale factor.\n"
+"\n"
+"When installed, will look for .glade file in "DATA_PATH"\n"
 << std::endl;
   }
 
@@ -148,12 +152,10 @@ int main(int argc, char** argv)
       exePath = exePath.parent_path();
     }
     if (exePath.empty()) {
-      SUBLIMINAL_FATAL(
-        "couldn't locate data directory in any parent of exe directory.  "
-        "Searched from " << exePath.parent_path()
-      );
+      dataPath = DATA_PATH;
+    } else {
+      dataPath = exePath/"data";
     }
-    dataPath = exePath/"data";
   }
 
   try {

@@ -1,5 +1,6 @@
 BIN := subliminal
-THIS_CPPFLAGS := `pkg-config --cflags libglademm-2.4`
+THIS_CPPFLAGS = \
+	`pkg-config --cflags libglademm-2.4` -DSUBLIMINAL_PREFIX='"$(PREFIX)"'
 LIB_DEP_NAMES := ffmsxx
 LIBS := -loptimal `pkg-config --libs libglademm-2.4` -lgsl -lboost_thread
 
