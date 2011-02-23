@@ -165,17 +165,17 @@ void extract_subtitles(
   // For pixel format we go with RGB, 8 bits each, because that's easy to
   // understand and work with.
   //
-  // We verify that the dimensions are multiples of 8, because otherwise
+  // We verify that the widths are multiples of 8, because otherwise
   // ffmpegsource tends to throw a wobbly; could work around it, but too lazy.
 
   auto const subs_dims = subs.encoded_dimensions();
-  if (subs_dims.width() % 4 != 0 || subs_dims.height() % 4 != 0) {
-    SUBLIMINAL_FATAL("dimensions of subtitled video must be multiples of 8");
+  if (subs_dims.width() % 8 != 0) {
+    SUBLIMINAL_FATAL("width of subtitled video must be a multiple of 8");
   }
 
   auto const raw_dims = raw.encoded_dimensions();
-  if (raw_dims.width() % 4 != 0 || raw_dims.height() % 4 != 0) {
-    SUBLIMINAL_FATAL("dimensions of raw video must be multiples of 8");
+  if (raw_dims.width() % 8 != 0) {
+    SUBLIMINAL_FATAL("width of raw video must be a multiple of 8");
   }
 
   ffmsxx::pixel_formats const formats(ffmsxx::pixel_format("rgb24"));
