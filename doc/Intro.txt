@@ -1,0 +1,101 @@
+Subliminal short intro
+======================
+
+This user documentation is under construction and potentially out of date.
+More reliable sources are subliminal's --help message and test/Makefile, which
+in particular demonstrates one way to postprocess subliminal's output.
+
+Quick start
+-----------
+
+To use subliminal to extract subtitles you will need two copies of the same
+video, one with subtitles and one without.  I refer to these as the 'subbed'
+and 'raw' videos respectively.  You can use these videos in any format
+supported by the ffmpeg libraries against which subliminal is linked.
+
+Apart from the presence or absence of subtitles, you will want these videos to
+be as similar as possible.  Subliminal will do its best to correct minor
+variations such as cropping, adjustments in brightness or contrast or timing,
+but it will not always succeed.
+
+At its simplest, subliminal is used thus:
+
+  subliminal --output output --raw raw_video.avi --subs subbed_video.mkv
+
+If you're very lucky, then this will suffice for you.
+
+Understanding the output
+------------------------
+
+The output file specified on the command line will be created.  It is a simple
+text file, with the subtitles listed one per line, in order of the last frame
+in which they appear.
+
+Each line looks something like this:
+
+  1.95 5.2 output.0000.png output.0001.png
+
+The first two fields are the time (in seconds) of the start and end of the
+subtitle, and each subsequent field names a png file which should have been
+created by subliminal.  The names of these png files will all start with the
+name of the overall output file.
+
+With luck one (and probably *only one*) of the given png files will contain the
+subtitle in a format which is easy to OCR.  To figure out which contains the
+real subtitle you will either have to look at them by hand, or (probably
+better) just OCR all of them and see which turns out best.  All but the correct
+one will probably yield junk when OCRed, so it should be simple to distinguish
+the correct answer by scoring them.  The score program included with subliminal
+provides a simple way to do this, which is probably good enough, but if your
+OCR program provides its own score then you might have more luck with that.
+
+Troubleshooting
+===============
+
+It is unlikely that everything will go right first time.  Here are some tricks
+for circumventing problems.
+
+Correcting alignment
+--------------------
+
+The first thing subliminal does when it runs is attempt to determine the
+correct alignment between the two videos.  You can see it do this if you are
+running with the GTK GUI turned on.  The greyscale image on the left will shift
+around as it attempts to find the best alignment.  Ideally, this should settle
+down to the correct alignment which will manifest as a smooth grey (except
+perhaps for any subtitles that appear on the frame being used for alignment).
+
+If the alignment doesn't work there are things you can do to help it.
+
+The easiest is to change which frame is used for the alignment using the
+--align option.  For best results find a frame without subtitles and with large
+areas of constant colour.  Frames with text on are bad.  But don't worry too
+much about finding the perfect frame, just try a few and see what works.
+
+If that's not sufficient, you can also tweak the optimization by changing its
+starting conditions using the --transform option.  In particular, if you
+specify the correct transform to this option then it should hone in on that
+quickly.
+
+If the alignment is never good enough even when it looks like it is as good as
+it might be, then this might indicate that the two frames being aligned are not
+truly equal, perhaps because the two videos are not perfectly aligned in their
+timings.  Subliminal cannot cope with this for now, but hopes to in the future.
+
+Going faster
+------------
+
+Subliminal will run much faster without the GTK GUI open.  You can run with the
+--no-gtk option to turn it off entirely.  If you prefer, you can also watch it
+on the GUI to begin with to make sure it's doing the right thing, but then
+close the GUI, which should cause it to speed up.
+
+Another useful option may be --frame-interval.  This can be used to analyze
+only every Nth frame, thus shortening the time required to cover the entire
+video by a factor of N.  However, the timings of the subtitles will be less
+precise, and some subtitles may be missing or less accurate.  This option is
+useful in particular for doing a quick first pass to see whether subliminal can
+have a shot of processing the whole video.  If for example you discover that
+the end of the video is useless then you can save time in later runs using the
+--end option to ignore that part.
+

@@ -32,13 +32,12 @@ Subliminal contains:
 - test
   Some test data.
 
+- doc
+  User documentation.
+
 Note that subliminal only extracts images which it believes to be the
 subtitles.  If you need text subtitles you will need an OCR program too.  I
 recommend tesseract <http://code.google.com/p/tesseract-ocr/>.
-
-As yet there is no user documentation, but you can read subliminal's --help
-message and experiment with the test data.  In particular, test/Makefile
-demonstrates one way to postprocess subliminal's output.
 
 
 LICENSE
