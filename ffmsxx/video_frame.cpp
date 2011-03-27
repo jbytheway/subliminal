@@ -14,6 +14,8 @@ struct video_frame::impl {
   FFMS_FrameInfo info;
 };
 
+video_frame::video_frame(video_frame&&) = default;
+
 video_frame& video_frame::operator=(video_frame&& r)
 {
   impl_ = std::move(r.impl_);
