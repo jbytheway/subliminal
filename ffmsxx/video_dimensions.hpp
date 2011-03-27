@@ -4,6 +4,8 @@
 #include <cassert>
 #include <iosfwd>
 
+#include <boost/gil/utilities.hpp>
+
 namespace ffmsxx {
 
 class video_dimensions {
@@ -15,6 +17,10 @@ class video_dimensions {
     }
     int width() const { assert(width_ > 0); return width_; }
     int height() const { assert(height_ > 0); return height_; }
+
+    boost::gil::point2<ptrdiff_t> as_point() const {
+      return {width_, height_};
+    }
   private:
     int width_;
     int height_;
