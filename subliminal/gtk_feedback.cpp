@@ -52,7 +52,7 @@ struct gtk_feedback::impl {
         SUBLIMINAL_FATAL("couldn't find " << gladePath);
       }
       Glib::RefPtr<Gnome::Glade::Xml> xml =
-        Gnome::Glade::Xml::create(gladePath.file_string());
+        Gnome::Glade::Xml::create(gladePath.string());
       xml->get_widget("MainWindow", window);
       BOOST_MPL_ASSERT_RELATION(num_images, ==, 6);
       xml->get_widget("Image0", images[0]);

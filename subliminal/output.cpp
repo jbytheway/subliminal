@@ -47,7 +47,7 @@ void output::save(
   BOOST_FOREACH(auto const& image, images) {
     auto new_index = index_++;
     std::string uniq = (boost::format(".%04d") % new_index).str();
-    auto image_name = root_.file_string()+uniq+".png";
+    auto image_name = root_.string()+uniq+".png";
     boost::gil::png_write_view(image_name, const_view(image));
     txt_out_ << ' ' << image_name;
   }

@@ -23,7 +23,7 @@ video_source::video_source(
   detail::error_info e;
   /** \todo Support multithreaded */
   FFMS_VideoSource* raw_source = FFMS_CreateVideoSource(
-    file.file_string().c_str(), track, i.raw(), 1/*threads*/,
+    file.c_str(), track, i.raw(), 1/*threads*/,
     seek_to_raw(seek), e.raw()
   );
   e.throw_if_null(raw_source);

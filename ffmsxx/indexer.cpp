@@ -26,7 +26,7 @@ track_info indexer::info(int track) const {
 indexer::indexer(boost::filesystem::path const& f)
 {
   detail::error_info e;
-  auto raw_indexer = FFMS_CreateIndexer(f.file_string().c_str(), e.raw());
+  auto raw_indexer = FFMS_CreateIndexer(f.c_str(), e.raw());
   e.throw_if_null(raw_indexer);
   impl_.reset(new impl{raw_indexer});
 }
