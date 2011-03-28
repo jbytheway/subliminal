@@ -14,9 +14,9 @@ namespace subliminal {
 
 struct transform_params {
   transform_params() :
-    x_shift(0), x_scale(1),
-    y_shift(0), y_scale(1),
-    l_shift(0), l_scale(1)
+    x_shift(0), x_scale(0),
+    y_shift(0), y_scale(0),
+    l_shift(0), l_scale(0)
   {
   }
 
