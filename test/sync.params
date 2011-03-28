@@ -1,0 +1,2 @@
+MENCODER_ARGS="-oac copy -ovc lavc -sb 1000"
+
