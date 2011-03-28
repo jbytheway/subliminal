@@ -25,6 +25,7 @@ namespace {
     Options() :
       chunking_threshold{10, 3},
       frame_interval{1},
+      sync_allowance{1, 5},
       gtk{true},
       help{},
       quiet{}
@@ -36,6 +37,7 @@ namespace {
     boost::fusion::vector<int, int> chunking_threshold;
     boost::filesystem::path data;
     int frame_interval;
+    boost::rational<int64_t> sync_allowance;
     bool gtk;
     bool help;
     bool quiet;
@@ -76,6 +78,10 @@ namespace {
 "                   each capital variable is a floating point value,\n"
 "                   X and Y are for spatial coordinates, L is luminosity,\n"
 "                   P is a quantity added, and T a scale factor.\n"
+"  -y, --sync N/D   Allow up to N/D seconds of deviation between the timings\n"
+"                   for matching video frames between the two videos.\n"
+"                   N and D must be integers, so this is a rational time in\n"
+"                   seconds.  Default 1/5.\n"
 "\n"
 "When installed, will look for .glade file in "DATA_PATH"\n"
 << std::endl;
@@ -98,6 +104,7 @@ namespace {
     parser.addOption("raw",            'r', &results.raw);
     parser.addOption("subs",           's', &results.subs);
     parser.addOption("transform",      't', &results.start_params);
+    parser.addOption("sync",           'y', &results.sync_allowance);
 
     if (parser.parse(argc, argv)) {
       std::cerr <<
@@ -174,7 +181,7 @@ int main(int argc, char** argv)
     subliminal::extract_subtitles_options extract_options{
       options.alignment_frame, options.start_params,
       options.chunking_threshold, options.frame_interval,
-      options.bounds, options.quiet
+      options.sync_allowance, options.bounds, options.quiet
     };
 
     subliminal::output out(options.output);

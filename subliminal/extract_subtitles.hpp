@@ -16,6 +16,7 @@ struct extract_subtitles_options {
   transform_params start_params;
   boost::fusion::vector<int, int> chunking_threshold;
   int frame_interval;
+  boost::rational<int64_t> sync_allowance;
   typedef boost::optional<int> OInt;
   std::pair<OInt, OInt> bounds;
   bool quiet;

@@ -37,7 +37,7 @@ namespace gsl_detail {
 }
 
 template<typename StateType, typename Range1, typename Range2, typename Scorer>
-StateType find_minimum_gsl(
+std::tuple<StateType, double> find_minimum_gsl(
   Range1 const& startRange,
   Range2 const& stepRange,
   double const precision,
@@ -92,7 +92,10 @@ StateType find_minimum_gsl(
 
   // Turn the resulting gsl_vector back into a fusion::vector
   auto const x = gsl_multimin_fminimizer_x(&*minimizer);
-  return gsl_detail::make_from_gsl_vector<StateType>(x);
+  return std::make_tuple(
+    gsl_detail::make_from_gsl_vector<StateType>(x),
+    gsl_multimin_fminimizer_minimum(&*minimizer)
+  );
 }
 
 }

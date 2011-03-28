@@ -26,51 +26,14 @@
 #include "flood_fill.hpp"
 #include "chunkify.hpp"
 #include "conglomerate_image.hpp"
+#include "nearby_frame_finder.hpp"
+#include "rms_delta_luminosity.hpp"
 
 namespace subliminal {
 
 namespace gil = boost::gil;
 
 namespace {
-
-  class closest_frame_finder {
-    public:
-      closest_frame_finder(ffmsxx::video_source const& source) :
-        source_(source),
-        time_base_(source_.time_base()),
-        frame_index_{0},
-        last_frame_{source.frame(frame_index_)},
-        this_frame_{source.frame(++frame_index_)}
-      {
-      }
-
-      bool get_closest_frame(
-        boost::rational<int64_t> const& time,
-        ffmsxx::video_frame const*& best_frame
-      )
-      {
-        while (this_frame_.time(time_base_) < time) {
-          last_frame_ = std::move(this_frame_);
-          ++frame_index_;
-          if (frame_index_ >= source_.num_frames()) {
-            return false;
-          }
-          this_frame_ = source_.frame(frame_index_);
-        }
-
-        auto diff_to_last = abs(time-last_frame_.time(time_base_));
-        auto diff_to_this = abs(time-this_frame_.time(time_base_));
-        best_frame =
-          &( diff_to_last < diff_to_this ? last_frame_ : this_frame_ );
-        return true;
-      }
-    private:
-      ffmsxx::video_source const& source_;
-      boost::rational<int64_t> time_base_;
-      int frame_index_;
-      ffmsxx::video_frame last_frame_;
-      ffmsxx::video_frame this_frame_;
-  };
 
   struct get_extreme_values {
     get_extreme_values(int thresh) : thresh_(thresh) {}
@@ -184,15 +147,22 @@ void extract_subtitles(
   raw.set_output_format(formats, raw_dims, ffmsxx::resizer::bicubic);
   subs.set_output_format(formats, subs_dims, ffmsxx::resizer::bicubic);
 
-  auto subs_time_base = subs.time_base();
+  auto const subs_time_base = subs.time_base();
+  auto const raw_time_base = raw.time_base();
+
+  boost::rational<int64_t> sync_bottom = -options.sync_allowance;
+  boost::rational<int64_t> sync_top = options.sync_allowance;
+
+  feedback.messagef(
+    boost::format("Initial sync bounds (%s, %s)") %
+      sync_bottom % sync_top
+  );
 
   boost::optional<frame_transform> best_transform;
   {
     // Step 1: Determine the appropriate affine transformation to make the raw
     // frames line up with the subbed ones; will be stored in best_transform
-    feedback.message("searching for good transform");
-
-    closest_frame_finder raw_finder{raw};
+    nearby_frame_finder raw_finder{raw};
 
     // Jump to a frame ~5 seconds in (blah blah framerate blah blah)
     int const sub_frame_index =
@@ -200,22 +170,61 @@ void extract_subtitles(
         *options.alignment_frame : std::min(25*5, subs.num_frames()/2) );
     auto subs_frame = subs.frame(sub_frame_index);
     auto subs_time = subs_frame.time(subs_time_base);
-    ffmsxx::video_frame const* raw_frame = NULL;
 
-    if (!raw_finder.get_closest_frame(subs_time, raw_frame)) {
+    auto const& potential_raw_frames = raw_finder.get_frames(
+      subs_time+sync_bottom, subs_time+sync_top
+    );
+
+    feedback.messagef(
+      boost::format("searching for good transform through %d frames near %s")
+        % potential_raw_frames.size() % subs_time
+    );
+
+    if (potential_raw_frames.empty()) {
       SUBLIMINAL_FATAL("videos seem to be of wildly different lengths");
     }
 
-    best_transform = find_best_transform(
-      *raw_frame, subs_frame, options.start_params, feedback
+    double best_score = 1.0/0.0;
+    auto best_it = potential_raw_frames.begin();
+    for (auto it = best_it; it != potential_raw_frames.end(); ++it) {
+      auto const& raw_frame = *it;
+      auto const raw_time = raw_frame.time(raw_time_base);
+      feedback.messagef(
+        boost::format("testing raw frame at %s") % raw_time
+      );
+      boost::optional<frame_transform> transform;
+      double score;
+      std::tie(transform, score) = find_best_transform(
+        raw_frame, subs_frame, options.start_params, feedback
+      );
+      if (score < best_score) {
+        best_score = score;
+        best_transform = transform;
+        best_it = it;
+      }
+    }
+
+    // We have the best transform, but at the same time we need to store the
+    // bounds we get which will inform later sync guesses
+    if (best_it != potential_raw_frames.begin()) {
+      sync_bottom = boost::prior(best_it)->time(raw_time_base) - subs_time;
+    }
+    if (boost::next(best_it) != potential_raw_frames.end()) {
+      sync_top = boost::next(best_it)->time(raw_time_base) - subs_time;
+    }
+
+    feedback.messagef(
+      boost::format("best frame at %s scored %f.  Sync bounds (%s, %s)") %
+        best_it->time(raw_time_base) % best_score % sync_bottom % sync_top
     );
   }
 
   assert(best_transform);
+  assert(sync_top > sync_bottom);
 
   {
     // Step 2: Walk through the video, and do stuff
-    closest_frame_finder raw_finder{raw};
+    nearby_frame_finder raw_finder{raw};
     /** \bug Should be unique_ptr, but gcc libstdc++ not good enough yet */
     typedef std::set<std::shared_ptr<conglomerate_image>> Conglomerates;
     Conglomerates active_conglomerates;
@@ -236,36 +245,69 @@ void extract_subtitles(
       begin_frame % end_frame
     );
 
+    auto const meaningful_area = best_transform->meaningful_area(
+      raw_dims.as_point(), subs_dims.as_point()
+    );
+    auto const subview_dims = meaningful_area.dimensions();
+
     for (int sub_frame_index = begin_frame; sub_frame_index < end_frame;
         sub_frame_index += options.frame_interval) {
       auto subs_frame = subs.frame(sub_frame_index);
       auto subs_time = subs_frame.time(subs_time_base);
-      ffmsxx::video_frame const* raw_frame = NULL;
 
-      if (!raw_finder.get_closest_frame(subs_time, raw_frame)) {
-        return;
+      auto const& potential_raw_frames = raw_finder.get_frames(
+        subs_time+sync_bottom, subs_time+sync_top
+      );
+
+      if (potential_raw_frames.empty()) {
+        // No frame against which to compare (presumably the framerate of the
+        // raws is lower or something) so just skip to the next one
+        continue;
       }
 
-      assert(raw_frame);
+      // Take various views on the subs
+      auto const subs_view = make_gil_view(subs_frame);
+      auto const subs_subview = subimage_view(subs_view, meaningful_area);
 
-      feedback.show(*raw_frame, 0);
       feedback.show(subs_frame, 1);
 
-      // Get Boost.GIL views on the images
-      auto raw_view = make_gil_view(*raw_frame);
-      auto subs_view = make_gil_view(subs_frame);
+      // Search through the potential raws for the best match
+      auto raw_frame_it = potential_raw_frames.begin();
+      double best_score = 1.0/0.0;
 
-      auto dims = subs_view.dimensions();
+      if (potential_raw_frames.size() > 1) {
+        for (auto it = raw_frame_it; it != potential_raw_frames.end(); ++it) {
+          feedback.show(*it, 0);
+          auto const raw_view = make_gil_view(*it);
 
-      // Apply chosen best transform to raw
-      boost::gil::gray8_image_t transformed(dims);
-      auto meaningful_area = (*best_transform)(raw_view, view(transformed));
+          // Apply chosen best transform to raw
+          boost::gil::gray8_image_t transformed(subs_dims.as_point());
+          (*best_transform)(raw_view, view(transformed));
 
-      // Take views of the two images within the meaningful area of the
-      // transformation
-      auto subview_dims = meaningful_area.dimensions();
-      auto subs_subview = subimage_view(subs_view, meaningful_area);
-      auto raw_subview =
+          // Take view of the meaningful area
+          auto const raw_subview =
+            subimage_view(const_view(transformed), meaningful_area);
+
+          // Score this choice
+          double const score =
+            rms_delta_luminosity(subs_subview, raw_subview, feedback);
+
+          if (score < best_score) {
+            best_score = score;
+            raw_frame_it = it;
+          }
+        }
+      }
+
+      feedback.show(*raw_frame_it, 0);
+
+      // Apply chosen best transform to raw (again!)
+      auto const raw_view = make_gil_view(*raw_frame_it);
+      boost::gil::gray8_image_t transformed(subs_dims.as_point());
+      (*best_transform)(raw_view, view(transformed));
+
+      // Take view of the meaningful area
+      auto const raw_subview =
         subimage_view(const_view(transformed), meaningful_area);
 
       // Copmute the delta of the two images
