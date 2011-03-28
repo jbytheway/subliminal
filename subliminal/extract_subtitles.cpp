@@ -150,8 +150,10 @@ void extract_subtitles(
   auto const subs_time_base = subs.time_base();
   auto const raw_time_base = raw.time_base();
 
-  boost::rational<int64_t> sync_bottom = -options.sync_allowance;
-  boost::rational<int64_t> sync_top = options.sync_allowance;
+  // Multiply sync allowance by 1000 to convert from seconds to milliseconds
+  // (the latter is what the FFMS timestamps are reported in)
+  boost::rational<int64_t> sync_bottom = -options.sync_allowance*1000;
+  boost::rational<int64_t> sync_top = options.sync_allowance*1000;
 
   feedback.messagef(
     boost::format("Initial sync bounds (%s, %s)") %
