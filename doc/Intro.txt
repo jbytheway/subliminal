@@ -59,11 +59,31 @@ Correcting alignment
 --------------------
 
 The first thing subliminal does when it runs is attempt to determine the
-correct alignment between the two videos.  You can see it do this if you are
-running with the GTK GUI turned on.  The greyscale image on the left will shift
-around as it attempts to find the best alignment.  Ideally, this should settle
-down to the correct alignment which will manifest as a smooth grey (except
-perhaps for any subtitles that appear on the frame being used for alignment).
+correct alignment between the two videos.  There are three things which have to
+be aligned:
+
+1. Temporal alignment, i.e. finding the offset between two matching frames in
+the two videos.  (At present subliminal only supports a fixed offset, not a
+drifting one).
+
+2. Spatial alignment, to account for the fact that the two videos might have
+been cropped and scaled differently.
+
+3. Chromatic alignment, to account for any differences in brightness, contrast,
+and gamma between the videos.
+
+You can watch subliminal attempt to find the correct alignment if you are
+running with the GTK GUI turned on.  It will choose one frame in the subbed
+video, and a range of frames from nearby times in the raw video, and try to
+find the best spatial and chromatic alignment between the two.  The greyscale
+image on the left will shift around as it attempts to find the best alignment.
+Ideally, this should settle down to the correct alignment which will manifest
+as a smooth grey (except perhaps for any subtitles that appear on the frame
+being used for alignment).
+
+Having performed these spatial/chromatic alignments for a variety of frames,
+the best match will be selected, and that will imply the temporal alignment
+also.
 
 If the alignment doesn't work there are things you can do to help it.
 
@@ -77,10 +97,12 @@ starting conditions using the --transform option.  In particular, if you
 specify the correct transform to this option then it should hone in on that
 quickly.
 
-If the alignment is never good enough even when it looks like it is as good as
-it might be, then this might indicate that the two frames being aligned are not
-truly equal, perhaps because the two videos are not perfectly aligned in their
-timings.  Subliminal cannot cope with this for now, but hopes to in the future.
+If the alignments are never good enough even when the best looks as good as
+it might be, then this might indicate that the correct frame to match the
+chosen subtitle frame is outside the range of raw frames being checked.  You
+can increase the range checked using the --sync option.  However, rather than
+making this too large, you might more usefully manually improve the alignment
+of the two videos using e.g. mkvmerge.
 
 Going faster
 ------------
