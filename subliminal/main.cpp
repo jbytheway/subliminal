@@ -17,7 +17,7 @@
 #include "fatal.hpp"
 #include "transform_params.hpp"
 
-#define DATA_PATH SUBLIMINAL_PREFIX"/subliminal"
+#define DATA_PATH SUBLIMINAL_PREFIX"/share/subliminal"
 
 namespace {
 
@@ -62,7 +62,8 @@ namespace {
 "                   directions respectively.  Default (10 3)\n"
 "  -d, --data DATA  Look for program data in DATA.  Default is to search for\n"
 "                   a directory named 'data' in the executable's directory\n"
-"                   or any parent thereof.\n"
+"                   or any parent thereof, or "DATA_PATH"\n"
+"                   (set at compile time based on install prefix).\n"
 "  -e, --end E      Analyze only before frame E\n"
 "  -f, --frame-interval N\n"
 "                   Analyze every Nth frame.  Default 1, but increase to go\n"
@@ -82,8 +83,6 @@ namespace {
 "                   for matching video frames between the two videos.\n"
 "                   N and D must be integers, so this is a rational time in\n"
 "                   seconds.  Default 1/5.\n"
-"\n"
-"When installed, will look for .glade file in "DATA_PATH"\n"
 << std::endl;
   }
 
