@@ -351,14 +351,20 @@ void extract_subtitles(
       }
       /** \todo Expose this parameter on the command line */
       if (chunks.size() > 10) {
-        feedback.message("implausibly many chunks; writing frame off");
+        feedback.messagef(
+          boost::format("%d: implausibly many chunks; writing frame off")
+            % sub_frame_index
+        );
         continue;
       }
 
       bool bad = false;
       BOOST_FOREACH(auto const& chunk, chunks) {
         if (non_black_height(const_view(chunk)) > size_t(subview_dims.y)/5) {
-          feedback.message("implausibly high chunk; writing frame off");
+          feedback.messagef(
+            boost::format("%d: implausibly high chunk; writing frame off")
+              % sub_frame_index
+          );
           bad = true;
           break;
         }
