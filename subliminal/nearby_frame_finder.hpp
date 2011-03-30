@@ -18,15 +18,23 @@ class nearby_frame_finder {
       boost::rational<int64_t> const& finish
     )
     {
-      while (next_frame_ &&
-        next_frame_->time(time_base_) < finish) {
-        recent_frames_.push_back(std::move(*next_frame_));
-        fetch_next_frame();
-      }
-
+      // 1. Discard too-old frames we have
       while (!recent_frames_.empty() &&
         recent_frames_.front().time(time_base_) < start) {
         recent_frames_.pop_front();
+      }
+
+      // 2. Skip over too-old frames still to come
+      if (recent_frames_.empty()) {
+        while (next_frame_ && next_frame_->time(time_base_) < start) {
+          fetch_next_frame();
+        }
+      }
+
+      // 3. Store frames in correct time interval
+      while (next_frame_ && next_frame_->time(time_base_) < finish) {
+        recent_frames_.push_back(std::move(*next_frame_));
+        fetch_next_frame();
       }
 
       return recent_frames_;
