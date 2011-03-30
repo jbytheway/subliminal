@@ -292,7 +292,7 @@ void extract_subtitles(
 
           // Score this choice
           double const score =
-            rms_delta_luminosity(subs_subview, raw_subview, feedback);
+            rms_delta_luminosity(raw_subview, subs_subview, feedback);
 
           if (score < best_score) {
             best_score = score;
