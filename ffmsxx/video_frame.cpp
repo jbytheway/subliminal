@@ -86,7 +86,9 @@ video_frame::video_frame(FFMS_VideoSource* video_source, int n) :
   for (int i=0; i<4; ++i) {
     int64_t height = impl_->frame.ScaledHeight;
     if (height < 0) {
-      height = impl_->frame.EncodedHeight;
+      // In this case we can't be sure of the size of planes after 0
+      // because some formats have "vertical chroma subsampling"
+      height = i ? 0 : impl_->frame.EncodedHeight;
     }
     assert(height >= 0);
     size_t const total_size =
