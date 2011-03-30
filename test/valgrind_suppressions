@@ -4,4 +4,23 @@
    fun:_dl_relocate_object
    fun:dl_main
 }
+{
+   Crazy invalid free in libc somewhere
+   Memcheck:Free
+   fun:free
+   obj:/lib64/libc-2.11.2.so
+   obj:/lib64/libc-2.11.2.so
+   fun:_vgnU_freeres
+   fun:__run_exit_handlers
+   fun:exit
+   fun:(below main)
+}
+{
+   OpenGL leak of 32 bytes
+   Memcheck:Leak
+   fun:calloc
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.2.5
+   obj:/usr/lib64/opengl/nvidia/lib/libGL.so.260.19.36
+}
 
