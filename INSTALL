@@ -28,7 +28,7 @@ You may need to add some things to user.mk, e.g. to get the right g++ version
 or allow it to find optimal if you don't install it (which you shouldn't need
 to.  Here for example is my user.mk:
 
-  CXX = g++-4.5.2
+  CXX = g++-4.6.2
   BUILD_LIBTOOLFLAGS += --tag=disable-shared
   BUILD_CPPFLAGS += \
     -I$(top_srcdir)../optimal \
