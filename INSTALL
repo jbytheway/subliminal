@@ -6,8 +6,9 @@ $ git submodule update
 
 Next you will need some dependencies:
 
-- gcc >= 4.4 (this code uses recently added C++0x features so new gcc really is
-  needed; other compilers are unikely to cope in the near term).
+- A recent C++ compiler (this code uses recently added C++11 features so a new
+  compiler really is needed; gcc is probably easiest, clang could probably be
+  made to work).
 - ffmpegsource, a wrapper round ffmpeg to facilitate simple extraction of
   frames.  If it's not in your distro then see
   http://code.google.com/p/ffmpegsource/ .  It's certainly possible to use it
@@ -27,7 +28,7 @@ You may need to add some things to user.mk, e.g. to get the right g++ version
 or allow it to find optimal if you don't install it (which you shouldn't need
 to.  Here for example is my user.mk:
 
-  CXX = g++-4.4.5
+  CXX = g++-4.5.2
   BUILD_LIBTOOLFLAGS += --tag=disable-shared
   BUILD_CPPFLAGS += \
     -I$(top_srcdir)../optimal \
