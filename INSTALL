@@ -19,7 +19,7 @@ Next you will need some dependencies:
 
 For me, ffmpegsource doesn't build a shared version of its library and libtool
 somehow fails to notice this and tries to link a shared library against the
-stativ one.  This doesn't work.  Could be the fault of e, ffmpegsource or
+static one.  This doesn't work.  Could be the fault of me, ffmpegsource or
 libtool.  You can work around it by putting --tag=disable-shared in
 BUILD_LIBTOOLFLAGS in user.mk (as in the example below).
 

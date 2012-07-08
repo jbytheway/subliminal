@@ -7,7 +7,7 @@ subtitles to facilitate soft-subbing.
 
 Copyright (C) 2010, 2011  John Bytheway <jbytheway at that gmail place>
 
-Note that the source tree is several megabytes (because of the vidoe test
+Note that the source tree is several megabytes (because of the video test
 data).  Bear that in mind if downloading or cloning over a slow connection.
 
 For building instructions see INSTALL.
