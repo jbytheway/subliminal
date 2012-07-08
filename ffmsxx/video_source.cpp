@@ -65,7 +65,7 @@ void video_source::set_output_format(
 )
 {
   detail::error_info e;
-  int ret = FFMS_SetOutputFormatV(
+  int ret = FFMS_SetOutputFormatV2(
     impl_->raw, formats.raw(), dims.width(), dims.height(),
     resizer_to_raw(resize), e.raw()
   );

@@ -7,13 +7,17 @@ namespace ffmsxx {
 
 class pixel_formats {
   public:
-    explicit pixel_formats(pixel_format const f) :
-      raw_(uint64_t(1) << f.raw())
-    {}
+    explicit pixel_formats(pixel_format const f)
+    {
+      // Don't want to use the initializer list constructor because of
+      // potential confusion with the (size, element) constructor
+      raw_.insert(raw_.end(), {f.raw(), -1});
+    }
 
-    uint64_t raw() const { return raw_; }
+    // FFMS2 representation is a pointer to a -1-terminated list.
+    int const* raw() const { return raw_.data(); }
   private:
-    uint64_t raw_;
+    std::vector<int> raw_;
 };
 
 }
