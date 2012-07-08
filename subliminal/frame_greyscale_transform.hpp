@@ -13,6 +13,11 @@ namespace subliminal {
 
 class frame_greyscale_transform {
   public:
+    // HACK: I have to move the default impl of the copy constructor into the
+    // cpp file to avoid a really stupid compiler warning from gcc 4.6.2.
+    // Hopefully this will go away with later versions.
+    frame_greyscale_transform(frame_greyscale_transform const&);
+
     frame_greyscale_transform(
       boost::gil::point2<ptrdiff_t> const& dims,
       double x_shift, double x_scale,

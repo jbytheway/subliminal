@@ -21,13 +21,13 @@
 
 #include "fatal.hpp"
 #include "frame_greyscale_transform.hpp"
-#include "find_best_greyscale_transform.hpp"
 #include "delta_luminosity.hpp"
 #include "flood_fill.hpp"
 #include "chunkify.hpp"
 #include "conglomerate_image.hpp"
 #include "nearby_frame_finder.hpp"
 #include "rms_delta_luminosity.hpp"
+#include "find_best_offset_and_transform.hpp"
 
 namespace subliminal {
 
@@ -148,7 +148,6 @@ void extract_subtitles(
   subs.set_output_format(formats, subs_dims, ffmsxx::resizer::bicubic);
 
   auto const subs_time_base = subs.time_base();
-  auto const raw_time_base = raw.time_base();
 
   // Multiply sync allowance by 1000 to convert from seconds to milliseconds
   // (the latter is what the FFMS timestamps are reported in)
@@ -160,68 +159,20 @@ void extract_subtitles(
       sync_bottom % sync_top
   );
 
-  boost::optional<frame_greyscale_transform> best_transform;
-  {
-    // Step 1: Determine the appropriate affine transformation to make the raw
-    // frames line up with the subbed ones; will be stored in best_transform
-    nearby_frame_finder raw_finder{raw};
+  // Step 1: Determine the appropriate affine transformation to make the raw
+  // frames line up with the subbed ones; will be stored in transform
 
-    // Jump to a frame ~5 seconds in (blah blah framerate blah blah)
-    int const sub_frame_index =
-      ( options.alignment_frame ?
-        *options.alignment_frame : std::min(25*5, subs.num_frames()/2) );
-    auto subs_frame = subs.frame(sub_frame_index);
-    auto subs_time = subs_frame.time(subs_time_base);
+  int alignment_frame = get_optional_value_or(options.alignment_frame,
+      // Default to a frame ~5 seconds in (at 25fps) or half way through
+      std::min(25*5, subs.num_frames()/2));
 
-    auto const& potential_raw_frames = raw_finder.get_frames(
-      subs_time+sync_bottom, subs_time+sync_top
-    );
+  // This calculates the transform, but also updates sync_bottom and sync_top
+  // with more refined estimates.
+  auto transform = find_best_offset_and_transform(
+    raw, subs, sync_bottom, sync_top, alignment_frame, options.start_params,
+    feedback
+  );
 
-    feedback.messagef(
-      boost::format("searching for good transform through %d frames near %s")
-        % potential_raw_frames.size() % subs_time
-    );
-
-    if (potential_raw_frames.empty()) {
-      SUBLIMINAL_FATAL("videos seem to be of wildly different lengths");
-    }
-
-    double best_score = 1.0/0.0;
-    auto best_it = potential_raw_frames.begin();
-    for (auto it = best_it; it != potential_raw_frames.end(); ++it) {
-      auto const& raw_frame = *it;
-      auto const raw_time = raw_frame.time(raw_time_base);
-      feedback.messagef(
-        boost::format("testing raw frame at %s") % raw_time
-      );
-      boost::optional<frame_greyscale_transform> transform;
-      double score;
-      std::tie(transform, score) = find_best_greyscale_transform(
-        raw_frame, subs_frame, options.start_params, feedback
-      );
-      if (score < best_score) {
-        best_score = score;
-        best_transform = transform;
-        best_it = it;
-      }
-    }
-
-    // We have the best transform, but at the same time we need to store the
-    // bounds we get which will inform later sync guesses
-    if (best_it != potential_raw_frames.begin()) {
-      sync_bottom = boost::prior(best_it)->time(raw_time_base) - subs_time;
-    }
-    if (boost::next(best_it) != potential_raw_frames.end()) {
-      sync_top = boost::next(best_it)->time(raw_time_base) - subs_time;
-    }
-
-    feedback.messagef(
-      boost::format("best frame at %s scored %f.  Sync bounds (%s, %s)") %
-        best_it->time(raw_time_base) % best_score % sync_bottom % sync_top
-    );
-  }
-
-  assert(best_transform);
   assert(sync_top > sync_bottom);
 
   {
@@ -247,7 +198,7 @@ void extract_subtitles(
       begin_frame % end_frame
     );
 
-    auto const meaningful_area = best_transform->meaningful_area(
+    auto const meaningful_area = transform.meaningful_area(
       raw_dims.as_point(), subs_dims.as_point()
     );
     auto const subview_dims = meaningful_area.dimensions();
@@ -284,7 +235,7 @@ void extract_subtitles(
 
           // Apply chosen best transform to raw
           boost::gil::gray8_image_t transformed(subs_dims.as_point());
-          (*best_transform)(raw_view, view(transformed));
+          transform(raw_view, view(transformed));
 
           // Take view of the meaningful area
           auto const raw_subview =
@@ -306,7 +257,7 @@ void extract_subtitles(
       // Apply chosen best transform to raw (again!)
       auto const raw_view = make_gil_view(*raw_frame_it);
       boost::gil::gray8_image_t transformed(subs_dims.as_point());
-      (*best_transform)(raw_view, view(transformed));
+      transform(raw_view, view(transformed));
 
       // Take view of the meaningful area
       auto const raw_subview =
