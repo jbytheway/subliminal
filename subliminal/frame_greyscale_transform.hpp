@@ -1,19 +1,19 @@
-#ifndef SUBLIMINAL__FRAME_TRANSFORM_HPP
-#define SUBLIMINAL__FRAME_TRANSFORM_HPP
+#ifndef SUBLIMINAL__FRAME_GREYSCALE_TRANSFORM_HPP
+#define SUBLIMINAL__FRAME_GREYSCALE_TRANSFORM_HPP
 
 #include <boost/gil/extension/numeric/sampler.hpp>
 #include <boost/gil/extension/numeric/resample.hpp>
 
-#include "transform_params.hpp"
+#include "greyscale_transform_params.hpp"
 #include "adjust_brightness_contrast.hpp"
 #include "rectangle.hpp"
 #include "subimage_view.hpp"
 
 namespace subliminal {
 
-class frame_transform {
+class frame_greyscale_transform {
   public:
-    frame_transform(
+    frame_greyscale_transform(
       boost::gil::point2<ptrdiff_t> const& dims,
       double x_shift, double x_scale,
       double y_shift, double y_scale,
@@ -23,9 +23,9 @@ class frame_transform {
       init(dims, x_shift, x_scale, y_shift, y_scale, l_shift, l_scale);
     }
 
-    frame_transform(
+    frame_greyscale_transform(
       boost::gil::point2<ptrdiff_t> const& dims,
-      transform_params const& params
+      greyscale_transform_params const& params
     )
     {
       init(
@@ -105,5 +105,5 @@ class frame_transform {
 
 }
 
-#endif // SUBLIMINAL__FRAME_TRANSFORM_HPP
+#endif // SUBLIMINAL__FRAME_GREYSCALE_TRANSFORM_HPP
 

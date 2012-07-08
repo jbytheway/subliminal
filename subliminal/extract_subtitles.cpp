@@ -20,8 +20,8 @@
 #include <ffmsxx/make_gil_view.hpp>
 
 #include "fatal.hpp"
-#include "frame_transform.hpp"
-#include "find_best_transform.hpp"
+#include "frame_greyscale_transform.hpp"
+#include "find_best_greyscale_transform.hpp"
 #include "delta_luminosity.hpp"
 #include "flood_fill.hpp"
 #include "chunkify.hpp"
@@ -160,7 +160,7 @@ void extract_subtitles(
       sync_bottom % sync_top
   );
 
-  boost::optional<frame_transform> best_transform;
+  boost::optional<frame_greyscale_transform> best_transform;
   {
     // Step 1: Determine the appropriate affine transformation to make the raw
     // frames line up with the subbed ones; will be stored in best_transform
@@ -194,9 +194,9 @@ void extract_subtitles(
       feedback.messagef(
         boost::format("testing raw frame at %s") % raw_time
       );
-      boost::optional<frame_transform> transform;
+      boost::optional<frame_greyscale_transform> transform;
       double score;
-      std::tie(transform, score) = find_best_transform(
+      std::tie(transform, score) = find_best_greyscale_transform(
         raw_frame, subs_frame, options.start_params, feedback
       );
       if (score < best_score) {

@@ -15,7 +15,7 @@
 #include "text_feedback.hpp"
 #include "gtk_feedback.hpp"
 #include "fatal.hpp"
-#include "transform_params.hpp"
+#include "greyscale_transform_params.hpp"
 
 #define DATA_PATH SUBLIMINAL_PREFIX"/share/subliminal"
 
@@ -44,7 +44,7 @@ namespace {
     std::string raw;
     std::string subs;
     boost::filesystem::path output;
-    subliminal::transform_params start_params;
+    subliminal::greyscale_transform_params start_params;
   };
 
   void usage()

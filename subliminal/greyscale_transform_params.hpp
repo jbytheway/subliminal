@@ -1,5 +1,5 @@
-#ifndef SUBLIMINAL__TRANSFORM_PARAMS
-#define SUBLIMINAL__TRANSFORM_PARAMS
+#ifndef SUBLIMINAL__GREYSCALE_TRANSFORM_PARAMS
+#define SUBLIMINAL__GREYSCALE_TRANSFORM_PARAMS
 
 #include <cassert>
 #include <iosfwd>
@@ -12,8 +12,8 @@
 
 namespace subliminal {
 
-struct transform_params {
-  transform_params() :
+struct greyscale_transform_params {
+  greyscale_transform_params() :
     x_shift(0), x_scale(0),
     y_shift(0), y_scale(0),
     l_shift(0), l_scale(0)
@@ -21,7 +21,7 @@ struct transform_params {
   }
 
   template<typename Sequence>
-  transform_params(Sequence const& s) {
+  greyscale_transform_params(Sequence const& s) {
     BOOST_MPL_ASSERT((
         typename boost::fusion::traits::is_sequence<Sequence>::type
       ));
@@ -39,7 +39,7 @@ struct transform_params {
     assert(y_scale);
   }
 
-  transform_params(
+  greyscale_transform_params(
     double x_sh, double x_sc,
     double y_sh, double y_sc,
     double l_sh, double l_sc
@@ -60,13 +60,13 @@ struct transform_params {
   double l_scale;
 };
 
-std::istream& operator>>(std::istream&, transform_params&);
-std::ostream& operator<<(std::ostream&, transform_params const&);
+std::istream& operator>>(std::istream&, greyscale_transform_params&);
+std::ostream& operator<<(std::ostream&, greyscale_transform_params const&);
 
 }
 
 SUBLIMINAL_ADAPT_STRUCT(
-  subliminal::transform_params,
+  subliminal::greyscale_transform_params,
   (x_shift)
   (x_scale)
   (y_shift)
@@ -75,5 +75,5 @@ SUBLIMINAL_ADAPT_STRUCT(
   (l_scale)
 )
 
-#endif // SUBLIMINAL__TRANSFORM_PARAMS
+#endif // SUBLIMINAL__GREYSCALE_TRANSFORM_PARAMS
 

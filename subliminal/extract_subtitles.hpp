@@ -6,14 +6,14 @@
 #include <ffmsxx/fwd.hpp>
 
 #include "visual_feedback.hpp"
-#include "transform_params.hpp"
+#include "greyscale_transform_params.hpp"
 #include "output.hpp"
 
 namespace subliminal {
 
 struct extract_subtitles_options {
   boost::optional<int> alignment_frame;
-  transform_params start_params;
+  greyscale_transform_params start_params;
   boost::fusion::vector<int, int> chunking_threshold;
   int frame_interval;
   boost::rational<int64_t> sync_allowance;

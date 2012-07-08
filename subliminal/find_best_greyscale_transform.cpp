@@ -1,4 +1,4 @@
-#include "find_best_transform.hpp"
+#include "find_best_greyscale_transform.hpp"
 
 #include <boost/spirit/home/phoenix/object/construct.hpp>
 #include <boost/spirit/home/phoenix/core/argument.hpp>
@@ -53,10 +53,10 @@ namespace {
 
 }
 
-std::tuple<frame_transform, double> find_best_transform(
+std::tuple<frame_greyscale_transform, double> find_best_greyscale_transform(
   ffmsxx::video_frame const& from,
   ffmsxx::video_frame const& to,
-  transform_params const& start_params,
+  greyscale_transform_params const& start_params,
   visual_feedback& feedback
 )
 {
@@ -70,14 +70,15 @@ std::tuple<frame_transform, double> find_best_transform(
   namespace px = boost::phoenix;
   using namespace px::arg_names;
   auto transform_maker =
-    px::construct<frame_transform>(from_view.dimensions(), arg1);
+    px::construct<frame_greyscale_transform>(from_view.dimensions(), arg1);
 
   luminosity_match_scorer<decltype(transform_maker), decltype(to_view)>
     scorer(transform_maker, from_view, to_view, feedback);
 
   // Search using a GSL multidimensional minimizer (specifically: Nelder-Mead
   // Simplex algorithm)
-  auto const best_state_and_score = find_minimum_gsl<transform_params>(
+  auto const best_state_and_score =
+    find_minimum_gsl<greyscale_transform_params>(
     boost::assign::list_of
       (start_params.x_shift)
       (start_params.x_scale)
@@ -97,7 +98,7 @@ std::tuple<frame_transform, double> find_best_transform(
   feedback.messagef(boost::format("Final params: %s\n") % best_state);
 
   return std::make_tuple(
-    frame_transform(from_view.dimensions(), best_state), score
+    frame_greyscale_transform(from_view.dimensions(), best_state), score
   );
 }
 
