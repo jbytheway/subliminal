@@ -8,6 +8,7 @@
 #include "adjust_brightness_contrast.hpp"
 #include "rectangle.hpp"
 #include "subimage_view.hpp"
+#include "invalid_transform.hpp"
 
 namespace subliminal {
 
@@ -53,6 +54,10 @@ class frame_greyscale_transform {
         std::floor(std::min<double>(bottom_right.x, out_dims.x));
       bottom_right.y =
         std::floor(std::min<double>(bottom_right.y, out_dims.y));
+      if (top_left.x > bottom_right.x ||
+        top_left.y > bottom_right.y) {
+        throw invalid_transform();
+      }
       return rectangle<ptrdiff_t>(top_left, bottom_right);
     }
 
