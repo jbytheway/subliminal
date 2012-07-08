@@ -122,7 +122,7 @@ bool conglomerate_image::consistent_overlap(
 {
   assert(pixels_.size() == size_t(v.width() * v.height()));
   std::vector<int> delta_lums;
-  auto max_delta = std::transform(
+  std::transform(
     pixels_.begin(), pixels_.end(),
     v.begin(),
     std::back_inserter(delta_lums),
