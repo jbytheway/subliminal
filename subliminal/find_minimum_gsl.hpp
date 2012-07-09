@@ -60,16 +60,13 @@ std::tuple<StateType, double> find_minimum_gsl(
   struct F {
     static double f(const gsl_vector* x, void* params) {
       Scorer const& scorer = static_cast<FParams*>(params)->sc;
-      visual_feedback& feedback = static_cast<FParams*>(params)->fb;
       auto const p = gsl_detail::make_from_gsl_vector<StateType>(x);
       try {
         double const score = scorer(p);
-        feedback.messagef(boost::format("score(%1%)=%2%") % p % score);
         return score;
       } catch (invalid_transform const&) {
         // HACK: This exception type really shouldn't be visible here, but OTOH
         // I don't really want to catch all...
-        feedback.messagef(boost::format("score(%1%) incomputable") % p);
         return GSL_NAN;
       }
     }
