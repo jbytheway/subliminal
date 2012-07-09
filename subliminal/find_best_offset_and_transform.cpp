@@ -47,13 +47,13 @@ frame_greyscale_transform find_best_offset_and_transform(
   double best_score = 1.0/0.0;
 
   greyscale_transform_params iter_start_params = start_params;
+  greyscale_transform_params best_params;
 
   for (int i=0; i<2; ++i) {
     // We do this whole process twice, because often the first time round we
     // get lucky on one of the frames and get pretty good parameters, which
     // then bootstrap us to the real correct answer on the right frame on the
     // second pass.
-    greyscale_transform_params best_params;
     for (auto it = potential_raw_frames.begin();
         it != potential_raw_frames.end(); ++it) {
       auto const& raw_frame = *it;
@@ -92,8 +92,10 @@ frame_greyscale_transform find_best_offset_and_transform(
   }
 
   feedback.messagef(
-    boost::format("best frame at %s scored %f.  Sync bounds (%s, %s)") %
-      best_it->time(raw_time_base) % best_score % sync_bottom % sync_top
+    boost::format(
+      "best frame at %s, params %s scored %f.  Sync bounds (%s, %s)") %
+      best_it->time(raw_time_base) % best_params % best_score %
+      sync_bottom % sync_top
   );
 
   return *best_transform;
