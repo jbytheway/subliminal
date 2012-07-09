@@ -53,7 +53,8 @@ namespace {
 
 }
 
-std::tuple<frame_greyscale_transform, double> find_best_greyscale_transform(
+std::tuple<greyscale_transform_params, frame_greyscale_transform, double>
+find_best_greyscale_transform(
   ffmsxx::video_frame const& from,
   ffmsxx::video_frame const& to,
   greyscale_transform_params const& start_params,
@@ -95,10 +96,12 @@ std::tuple<frame_greyscale_transform, double> find_best_greyscale_transform(
   auto const best_state = std::get<0>(best_state_and_score);
   double const score = std::get<1>(best_state_and_score);
 
-  feedback.messagef(boost::format("Final params: %s\n") % best_state);
+  feedback.messagef(
+    boost::format("Final: score(%s) = %s\n") % best_state % score);
 
   return std::make_tuple(
-    frame_greyscale_transform(from_view.dimensions(), best_state), score
+    best_state, frame_greyscale_transform(from_view.dimensions(), best_state),
+    score
   );
 }
 
