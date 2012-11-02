@@ -1,6 +1,8 @@
 #ifndef SUBLIMINAL__RECTANGLE_HPP
 #define SUBLIMINAL__RECTANGLE_HPP
 
+#include <boost/gil/utilities.hpp>
+
 namespace subliminal {
 
 template<typename T>

@@ -5,12 +5,13 @@
 
 #include <ffmsxx/fwd.hpp>
 
-#include "frame_greyscale_transform.hpp"
+#include "frame_colour_transform.hpp"
 #include "visual_feedback.hpp"
+#include "greyscale_transform_params.hpp"
 
 namespace subliminal {
 
-frame_greyscale_transform find_best_offset_and_transform(
+frame_colour_transform find_best_offset_and_transform(
   ffmsxx::video_source const& raw,
   ffmsxx::video_source const& subs,
   boost::rational<int64_t>& sync_bottom,

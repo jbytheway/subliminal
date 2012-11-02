@@ -1,6 +1,8 @@
 #ifndef SUBLIMINAL__CLAMP_HPP
 #define SUBLIMINAL__CLAMP_HPP
 
+#include <limits>
+
 namespace subliminal {
 
 template<typename T, typename U>

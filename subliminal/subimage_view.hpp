@@ -1,6 +1,8 @@
 #ifndef SUBLIMINAL__SUBIMAGE_VIEW_HPP
 #define SUBLIMINAL__SUBIMAGE_VIEW_HPP
 
+#include "rectangle.hpp"
+
 namespace subliminal {
 
 template<typename View>

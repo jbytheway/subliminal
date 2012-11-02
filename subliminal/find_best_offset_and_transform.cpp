@@ -8,10 +8,11 @@
 #include "fatal.hpp"
 #include "nearby_frame_finder.hpp"
 #include "find_best_greyscale_transform.hpp"
+#include "find_best_colour_transform.hpp"
 
 namespace subliminal {
 
-frame_greyscale_transform find_best_offset_and_transform(
+frame_colour_transform find_best_offset_and_transform(
   ffmsxx::video_source const& raw,
   ffmsxx::video_source const& subs,
   boost::rational<int64_t>& sync_bottom,
@@ -98,7 +99,13 @@ frame_greyscale_transform find_best_offset_and_transform(
       sync_bottom % sync_top
   );
 
-  return *best_transform;
+  // We have now got all the alignment we need in greyscale, and next step is
+  // to extend it to a colour transform
+  auto colour_transform = find_best_colour_transform(
+    *best_it, subs_frame, best_params.spatial(), feedback
+  );
+
+  return colour_transform;
 }
 
 }

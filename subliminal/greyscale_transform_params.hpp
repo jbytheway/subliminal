@@ -9,6 +9,7 @@
 #include <boost/fusion/include/size.hpp>
 
 #include "adapt_struct.hpp"
+#include "spatial_transform_params.hpp"
 
 namespace subliminal {
 
@@ -52,6 +53,11 @@ struct greyscale_transform_params {
     assert(y_scale);
   }
 
+  spatial_transform_params spatial() const {
+    return {x_shift, x_scale, y_shift, y_scale};
+  }
+
+  // FIXME: if it works, we should factor out a spatial_transform_params here
   double x_shift;
   double x_scale;
   double y_shift;
